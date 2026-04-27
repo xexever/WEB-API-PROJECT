@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Основная информация -->
+            <div class="card border-0 shadow-lg mb-4" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9f0 100%);">
+                <div class="card-header bg-transparent border-0 pt-4">
+                    <h2 class="text-center" style="color: #2d6a4f;">Редактирование профиля</h2>
+                </div>
+                <div class="card-body px-4 px-lg-5 py-4">
+                    
+                    <!-- Форма редактирования профиля -->
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Имя -->
+                        <div class="mb-4">
+                            {{ form.name.label(class="form-label fw-semibold", style="color: #2d6a4f; font-size: 1.1rem;") }}
+                            {{ form.name(class="form-control form-control-lg", style="border: 2px solid #d4e6d4; border-radius: 12px; font-size: 1rem; padding: 12px;") }}
+                            <small class="text-muted">Оставьте пустым, если не хотите менять</small>
+                            {% for error in form.name.errors %}
+                                <div class="alert alert-danger mt-2">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Email -->
+                        <div class="mb-4">
+                            {{ form.email.label(class="form-label fw-semibold", style="color: #2d6a4f; font-size: 1.1rem;") }}
+                            {{ form.email(class="form-control form-control-lg", style="border: 2px solid #d4e6d4; border-radius: 12px; font-size: 1rem; padding: 12px;") }}
+                            <small class="text-muted">Оставьте пустым, если не хотите менять</small>
+                            {% for error in form.email.errors %}
+                                <div class="alert alert-danger mt-2">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- О себе -->
+                        <div class="mb-4">
+                            {{ form.about.label(class="form-label fw-semibold", style="color: #2d6a4f; font-size: 1.1rem;") }}
+                            {{ form.about(class="form-control", rows="5", style="border: 2px solid #d4e6d4; border-radius: 12px; font-size: 1rem; padding: 12px;") }}
+                            <small class="text-muted">Оставьте пустым, если не хотите менять</small>
+                            {% for error in form.about.errors %}
+                                <div class="alert alert-danger mt-2">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Аватар -->
+                        <div class="mb-4">
+                            {{ form.avatar.label(class="form-label fw-semibold", style="color: #2d6a4f; font-size: 1.1rem;") }}
+                            {{ form.avatar(class="form-control form-control-lg", accept="image/*", style="border: 2px solid #d4e6d4; border-radius: 12px;") }}
+                            <div class="form-text mt-1">Выберите файл, чтобы заменить аватар</div>
+                            {% for error in form.avatar.errors %}
+                                <div class="alert alert-danger mt-2">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Предпросмотр аватара -->
+                        <div class="mb-4 text-center" id="avatarPreviewContainer" style="display: none;">
+                            <label class="form-label fw-semibold" style="color: #2d6a4f;">Новый аватар:</label>
+                            <div>
+                                <img id="avatarPreview" src="#" alt="Preview" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 3px solid #95d5b2;">
+                            </div>
+                        </div>
+                        
+                        <!-- Текущий аватар -->
+                        {% if current_user.avatar and current_user.avatar != '/static/default_avatar.png' %}
+                        <div class="mb-4 text-center">
+                            <label class="form-label fw-semibold" style="color: #2d6a4f;">Текущий аватар:</label>
+                            <div>
+                                <img src="{{ current_user.avatar }}" alt="Current avatar" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;">
+                                <div>
+                                    <button type="button" id="deleteAvatarBtn" class="btn btn-danger btn-sm">
+                                        Удалить аватар
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Кнопки -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4">
+                            <a href="{{ url_for('profile', user_id=current_user.id) }}" class="btn btn-secondary btn-lg px-4" style="border-radius: 10px;">
+                                Отмена
+                            </a>
+                            {{ form.submit(class="btn btn-success btn-lg px-5", style="background: linear-gradient(135deg, #40916c 0%, #2d6a4f 100%); border: none; border-radius: 10px; font-size: 1.1rem;") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Смена пароля (отдельная карточка) -->
+            <div class="card border-0 shadow-lg" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9f0 100%);">
+                <div class="card-header bg-transparent border-0 pt-4">
+                    <h4 class="text-center mb-0" style="color: #2d6a4f;">Смена пароля</h4>
+                </div>
+                <div class="card-body px-4 px-lg-5 py-4">
+                    <form id="passwordChangeForm">
+                        <div class="mb-3">
+                            <label class="form-label" style="color: #2d6a4f;">Текущий пароль</label>
+                            <input type="password" name="current_password" class="form-control form-control-lg" required
+                                   style="border: 2px solid #d4e6d4; border-radius: 12px;">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" style="color: #2d6a4f;">Новый пароль</label>
+                            <input type="password" name="new_password" class="form-control form-control-lg" required minlength="6"
+                                   style="border: 2px solid #d4e6d4; border-radius: 12px;">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" style="color: #2d6a4f;">Подтвердите пароль</label>
+                            <input type="password" name="confirm_password" class="form-control form-control-lg" required
+                                   style="border: 2px solid #d4e6d4; border-radius: 12px;">
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100 btn-lg" style="border-radius: 10px;">
+                            Сменить пароль
+                        </button>
+                    </form>
+                    
+                    <div id="passwordMessage" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Предпросмотр аватара
+const avatarInput = document.querySelector('#avatar');
+if (avatarInput) {
+    avatarInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('avatarPreview');
+                const container = document.getElementById('avatarPreviewContainer');
+                preview.src = e.target.result;
+                container.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+// Удаление аватара
+const deleteBtn = document.getElementById('deleteAvatarBtn');
+if (deleteBtn) {
+    deleteBtn.addEventListener('click', async function() {
+        if (confirm('Вы уверены, что хотите удалить аватар?')) {
+            const response = await fetch('/delete_avatar', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const result = await response.json();
+            if (result.success) {
+                location.reload();
+            } else {
+                alert(result.message);
+            }
+        }
+    });
+}
+
+// Смена пароля через AJAX
+document.getElementById('passwordChangeForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const response = await fetch('/change_password', {
+        method: 'POST',
+        body: formData
+    });
+    
+    const result = await response.json();
+    const messageDiv = document.getElementById('passwordMessage');
+    
+    if (result.success) {
+        messageDiv.innerHTML = `<div class="alert alert-success">${result.message}</div>`;
+        this.reset();
+        setTimeout(() => {
+            messageDiv.innerHTML = '';
+        }, 3000);
+    } else {
+        if (result.errors) {
+            let errors = '';
+            for (let field in result.errors) {
+                errors += result.errors[field].join(', ') + '<br>';
+            }
+            messageDiv.innerHTML = `<div class="alert alert-danger">❌ ${errors}</div>`;
+        } else {
+            messageDiv.innerHTML = `<div class="alert alert-danger">❌ ${result.message}</div>`;
+        }
+    }
+});
+</script>
+{% endblock %}

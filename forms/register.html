@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="text-center mb-0">Регистрация</h1>
+                </div>
+                <div class="card-body">
+                    <form action="" method="post" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+
+                        <!-- Email -->
+                        <div class="mb-3">
+                            {{ form.email.label(class="form-label") }}
+                            {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""), type="email", placeholder="example@mail.com") }}
+                            {% for error in form.email.errors %}
+                                <div class="invalid-feedback">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Password -->
+                        <div class="mb-3">
+                            {{ form.password.label(class="form-label") }}
+                            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), type="password", placeholder="Минимум 6 символов") }}
+                            {% for error in form.password.errors %}
+                                <div class="invalid-feedback">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div class="mb-3">
+                            {{ form.password_again.label(class="form-label") }}
+                            {{ form.password_again(class="form-control" + (" is-invalid" if form.password_again.errors else ""), type="password", placeholder="Повторите пароль") }}
+                            {% for error in form.password_again.errors %}
+                                <div class="invalid-feedback">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Username -->
+                        <div class="mb-3">
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), placeholder="Ваше имя пользователя") }}
+                            {% for error in form.name.errors %}
+                                <div class="invalid-feedback">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- About -->
+                        <div class="mb-3">
+                            {{ form.about.label(class="form-label") }}
+                            {{ form.about(class="form-control" + (" is-invalid" if form.about.errors else ""), rows="4", placeholder="Расскажите немного о себе...") }}
+                            {% for error in form.about.errors %}
+                                <div class="invalid-feedback">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Avatar -->
+                        <div class="mb-3">
+                            {{ form.avatar.label(class="form-label") }}
+                            {{ form.avatar(class="form-control" + (" is-invalid" if form.avatar.errors else ""), accept="image/*") }}
+                            <div class="form-text">Поддерживаемые форматы: JPG, PNG, JPEG, GIF. Максимальный размер: 5MB</div>
+                            {% for error in form.avatar.errors %}
+                                <div class="invalid-feedback">
+                                    {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Preview Avatar -->
+                        <div class="mb-3 text-center" id="avatarPreviewContainer" style="display: none;">
+                            <label class="form-label">Предпросмотр аватара:</label>
+                            <div>
+                                <img id="avatarPreview" src="#" alt="Avatar preview" style="max-width: 150px; max-height: 150px; border-radius: 50%; object-fit: cover;" class="border">
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            {{ form.submit(type="submit", class="btn btn-primary btn-lg") }}
+                        </div>
+
+                        <!-- Message -->
+                        {% if message %}
+                            <div class="alert alert-danger mt-3" role="alert">
+                                {{ message }}
+                            </div>
+                        {% endif %}
+                    </form>
+                </div>
+                <div class="card-footer text-muted text-center">
+                    Уже есть аккаунт? <a href="{{ url_for('login') }}">Войдите</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Preview avatar before upload
+document.getElementById('avatar').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('avatarPreview');
+            const container = document.getElementById('avatarPreviewContainer');
+            preview.src = e.target.result;
+            container.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        document.getElementById('avatarPreviewContainer').style.display = 'none';
+    }
+});
+</script>
+
+<style>
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    .card {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+    }
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46a0 100%);
+        transform: translateY(-2px);
+        transition: all 0.3s ease;
+    }
+
+</style>
+{% endblock %}
