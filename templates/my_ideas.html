@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">📝 Мои опубликованные идеи</h1>
+    
+    {% if ideas %}
+        <div class="row">
+            {% for idea in ideas %}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    {% if idea.image_url %}
+                    <img src="{{ idea.image_url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ idea.title }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title text-success">{{ idea.title }}</h5>
+                        <p class="card-text">{{ idea.description }}</p>
+                        <small class="text-muted">
+                            📅 {{ idea.created_date.strftime('%d.%m.%Y') }}
+                        </small>
+                        <div class="mt-2">
+                            <span class="badge badge-info">{{ idea.category }}</span>
+                            {% if idea.is_published %}
+                            <span class="badge badge-success">Опубликовано</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            У вас пока нет опубликованных идей. Перейдите в <a href="/generate_idea">генератор идей</a> и опубликуйте свою первую идею!
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

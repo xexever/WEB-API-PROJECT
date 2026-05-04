@@ -7,30 +7,55 @@
           href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
           crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <title>{{ title }}</title>
 </head>
 <body>
 <header>
-    <nav class="navbar navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
-            <a class="navbar-brand" href="/">Наше приложение</a>
-            <div class="ml-auto">
-                {% if current_user.is_authenticated %}
-                    <a class="btn btn-outline-primary" href="{{ url_for('profile', user_id=current_user.id) }}">
-                        {{ current_user.name }}
-                    </a>
-                    <a class="btn btn-outline-danger" href="/logout">Выйти</a>
-                {% else %}
-                    <a class="btn btn-primary" href="/register">Зарегистрироваться</a>
-                    <a class="btn btn-success" href="/login">Войти</a>
-                {% endif %}
+            <a class="navbar-brand" href="/generate_idea">🎲 Генератор идей</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mr-auto">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="/generate_idea">✨ Главная</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/public_ideas">💡 Идеи пользователей</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/my_ideas">📝 Мои идеи</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/my_favorites">❤️ Избранное</a>
+                        </li>
+                    {% endif %}
+                </ul>
+                <div class="ml-auto">
+                    {% if current_user.is_authenticated %}
+                        <a class="btn btn-outline-primary" href="{{ url_for('profile', user_id=current_user.id) }}">
+                            👤 {{ current_user.name }}
+                        </a>
+                        <a class="btn btn-outline-danger" href="/logout">Выйти</a>
+                    {% else %}
+                        <a class="btn btn-primary" href="/register">Зарегистрироваться</a>
+                        <a class="btn btn-success" href="/login">Войти</a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </nav>
 </header>
-<!-- Begin page content -->
 <main role="main" class="container mt-4">
     {% block content %}{% endblock %}
 </main>
+
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 </body>
 </html>

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">💡 Идеи пользователей</h1>
+    
+    {% if ideas %}
+        <div class="row">
+            {% for idea in ideas %}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    {% if idea.image_url %}
+                    <img src="{{ idea.image_url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ idea.title }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title text-success">{{ idea.title }}</h5>
+                        <p class="card-text">{{ idea.description }}</p>
+                        <small class="text-muted">
+                            👤 {{ idea.author.name }} | 
+                            📅 {{ idea.created_date.strftime('%d.%m.%Y') }}
+                        </small>
+                        {% if idea.joke %}
+                        <div class="alert alert-light mt-2 small">
+                            "{{ idea.joke[:100] }}{% if idea.joke|length > 100 %}...{% endif %}"
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-footer bg-white">
+                        <button class="btn btn-outline-primary btn-sm" onclick="addToFavorites({{ idea.id }})">
+                            ❤️ В избранное
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            Пока нет опубликованных идей. Будьте первым!
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function addToFavorites(ideaId) {
+    fetch(`/add_to_favorites/${ideaId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ Идея добавлена в избранное!');
+        } else {
+            alert(data.message || 'Ошибка');
+        }
+    });
+}
+</script>
+{% endblock %}
