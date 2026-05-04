@@ -12,6 +12,7 @@ from data import db_session
 import os
 from werkzeug.utils import secure_filename
 from PIL import Image
+from flask import abort
 
 # Создаем приложение
 app = Flask(__name__)
@@ -222,8 +223,7 @@ def generate_idea():
     if request.method == 'POST':
         category = form.category.data
         idea_data = APIService.generate_idea(category)
-    elif request.method == 'GET' and not idea_data:
-        # При первом заходе генерируем случайную идею
+    else:  # GET request
         idea_data = APIService.generate_idea('random')
 
     return render_template('generate_idea.html',

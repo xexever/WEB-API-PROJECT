@@ -1,15 +1,12 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SubmitField, SelectField
-from wtforms.validators import Optional, Length
+from wtforms import SelectField, SubmitField
+from wtforms.validators import Optional
 
 
 class GenerateIdeaForm(FlaskForm):
     category = SelectField('Категория', choices=[
-        ('activity', 'Чем заняться'),
-        ('food', 'Что съесть'),
-        ('movie', 'Какой фильм посмотреть'),
-        ('place', 'Куда сходить'),
-        ('joke', 'Над чем посмеяться'),
-        ('random', 'Случайная идея')
+        ('food', '🍕 Что приготовить'),
+        ('joke', '😂 Посмеяться'),
+        ('random', '🎲 Случайная идея')
     ], validators=[Optional()])
-    submit = SubmitField('Сгенерировать идею ✨')
+    submit = SubmitField('Сгенерировать ✨')
