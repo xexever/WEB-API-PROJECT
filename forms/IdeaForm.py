@@ -4,9 +4,12 @@ from wtforms.validators import Optional
 
 
 class GenerateIdeaForm(FlaskForm):
-    category = SelectField('Категория', choices=[
-        ('food', '🍕 Что приготовить'),
-        ('joke', '😂 Посмеяться'),
-        ('random', '🎲 Случайная идея')
+    category = SelectField('Category', choices=[
+        ('food', '🍕 What to Cook'),
+        ('joke', '😂 Have a Laugh'),
+        ('advice', '💡 Get Advice'),
+        ('trivia', '❓ Trivia Question'),
+        ('name_info', '📊 Name Analysis'),
+        ('random', '🎲 Random Idea')
     ], validators=[Optional()])
-    submit = SubmitField('Сгенерировать ✨')
+    submit = SubmitField('Generate ✨')

@@ -6,8 +6,8 @@
         <div class="col-md-8">
             <div class="card shadow-lg mb-4">
                 <div class="card-header bg-success text-white text-center">
-                    <h2>🎲 Генератор идей</h2>
-                    <p class="mb-0">Выберите категорию и получите вдохновение!</p>
+                    <h2>🎲 Idea Generator</h2>
+                    <p class="mb-0">Choose a category and get inspired!</p>
                 </div>
                 <div class="card-body">
                     <form method="POST" id="generateForm">
@@ -17,7 +17,7 @@
                             {{ form.category(class="form-control", id="categorySelect") }}
                         </div>
                         <button type="submit" class="btn btn-success btn-lg btn-block mt-3 w-100" id="generateBtn">
-                            🎲 Сгенерировать
+                            🎲 Generate
                         </button>
                     </form>
                 </div>
@@ -27,41 +27,35 @@
             <div class="card shadow-lg" id="ideaCard">
                 <div class="card-header bg-info text-white">
                     <h3 class="mb-0">
-                        {% if idea.category == 'food' %}🍕 Еда
-                        {% elif idea.category == 'joke' %}😂 Юмор
-                        {% else %}💡 Идея
+                        {% if idea.category == 'food' %}🍕 Food
+                        {% elif idea.category == 'joke' %}😂 Humor
+                        {% elif idea.category == 'random_data' %}🎲 Random Data
+                        {% elif idea.category == 'advice' %}💡 Advice
+                        {% elif idea.category == 'trivia' %}❓ Trivia
+                        {% elif idea.category == 'name_info' %}📊 Name Analysis
+                        {% else %}💡 Idea
                         {% endif %}
                     </h3>
                 </div>
                 <div class="card-body">
-                    <!-- Изображение -->
+                    <!-- Image -->
                     {% if idea.image_url %}
                     <div class="text-center mb-4">
                         <img src="{{ idea.image_url }}"
                              class="img-fluid rounded shadow-sm"
-                             style="max-height: 300px; width: auto; object-fit: contain;"
+                             style="max-height: 400px; width: auto; object-fit: contain;"
                              alt="{{ idea.title }}"
                              loading="lazy"
-                             onerror="this.style.display='none'">
+                             onerror="this.src='https://via.placeholder.com/800x400?text=Image+Not+Available'">
                     </div>
                     {% endif %}
 
-                    <!-- Заголовок -->
+                    <!-- Title -->
                     <h4 class="text-success text-center mb-3">{{ idea.title }}</h4>
 
-                    <!-- Описание -->
-                    <p class="lead text-center">{{ idea.description }}</p>
-
-                    <!-- Дополнительная информация -->
-                    {% if idea.extra_info %}
-                    <div class="alert alert-info mt-3">
-                        <i class="fas fa-info-circle"></i> {{ idea.extra_info }}
-                    </div>
-                    {% endif %}
-
-                    <!-- Шутка -->
-                    {% if idea.joke_setup %}
-                    <div class="alert alert-light border mt-4">
+                    <!-- Description -->
+                    {% if idea.category == 'joke' and idea.joke_setup %}
+                    <div class="alert alert-light border mt-3">
                         <div class="text-center">
                             <i class="fas fa-quote-left fa-2x text-muted mb-3"></i>
                             <p class="mb-2 font-italic h5">{{ idea.joke_setup }}</p>
@@ -69,15 +63,54 @@
                             <p class="mb-0 h6 text-primary">{{ idea.joke_punchline }}</p>
                         </div>
                     </div>
+                    {% elif idea.category == 'advice' %}
+                    <div class="alert alert-light border mt-3">
+                        <div class="text-center">
+                            <i class="fas fa-lightbulb fa-2x text-warning mb-3"></i>
+                            <p class="mb-0 font-italic h5">{{ idea.description }}</p>
+                        </div>
+                    </div>
+                    {% elif idea.category == 'trivia' %}
+                    <div class="alert alert-light border mt-3">
+                        <div class="text-center">
+                            <i class="fas fa-question-circle fa-2x text-info mb-3"></i>
+                            <p class="mb-2 font-italic h5">{{ idea.description }}</p>
+                            <hr>
+                            <details>
+                                <summary class="text-primary" style="cursor: pointer;">🔍 Show Answer</summary>
+                                <p class="mt-2 mb-0 h6 text-success">{{ idea.correct_answer }}</p>
+                            </details>
+                        </div>
+                    </div>
+                    {% elif idea.category == 'name_info' %}
+                    <div class="alert alert-light border mt-3">
+                        <div class="text-center">
+                            <i class="fas fa-chart-bar fa-2x text-info mb-3"></i>
+                            <p class="mb-2 font-italic" style="white-space: pre-line;">{{ idea.description }}</p>
+                            {% if idea.extra_info %}
+                            <hr>
+                            <small class="text-muted">{{ idea.extra_info }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="lead text-center">{{ idea.description }}</p>
                     {% endif %}
 
-                    <!-- Кнопки сохранения -->
+                    <!-- Extra Info -->
+                    {% if idea.extra_info and idea.category != 'name_info' %}
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i> {{ idea.extra_info }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Save Buttons -->
                     <div class="mt-4 d-flex gap-2 justify-content-center">
                         <button class="btn btn-primary btn-lg mx-2" onclick="saveIdea(false)" style="min-width: 200px;">
-                            💾 Сохранить в избранное
+                            💾 Save to Favorites
                         </button>
                         <button class="btn btn-success btn-lg mx-2" onclick="saveIdea(true)" style="min-width: 200px;">
-                            📢 Опубликовать
+                            📢 Publish
                         </button>
                     </div>
                 </div>
@@ -88,21 +121,21 @@
 </div>
 
 <script>
-// Анимация загрузки
+// Loading animation
 document.getElementById('generateForm').addEventListener('submit', function() {
     const btn = document.getElementById('generateBtn');
     btn.disabled = true;
-    btn.innerHTML = '⏳ Генерация...';
+    btn.innerHTML = '⏳ Generating...';
     setTimeout(() => {
         btn.disabled = false;
-        btn.innerHTML = '🎲 Сгенерировать';
+        btn.innerHTML = '🎲 Generate';
     }, 2000);
 });
 
 function saveIdea(publish) {
     const data = {{ idea|tojson|safe if idea else 'null' }};
     if (!data) {
-        alert('Нет идеи для сохранения');
+        alert('No idea to save');
         return;
     }
 
@@ -118,18 +151,18 @@ function saveIdea(publish) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(publish ? '✨ Идея опубликована!' : '💾 Идея сохранена!');
+            alert(publish ? '✨ Idea published!' : '💾 Idea saved to favorites!');
         } else {
-            alert('Ошибка при сохранении');
+            alert('Error saving idea');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Ошибка при сохранении');
+        alert('An error occurred while saving');
     });
 }
 
-// Авто-генерация при смене категории
+// Auto-generate when category changes
 document.getElementById('categorySelect').addEventListener('change', function() {
     document.getElementById('generateForm').submit();
 });
@@ -161,6 +194,14 @@ document.getElementById('categorySelect').addEventListener('change', function() 
     img {
         max-width: 100%;
         border-radius: 10px;
+    }
+    details summary {
+        cursor: pointer;
+        list-style: none;
+        display: inline-block;
+    }
+    details summary::-webkit-details-marker {
+        display: none;
     }
 </style>
 {% endblock %}
