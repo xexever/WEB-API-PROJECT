@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -8,13 +8,147 @@
           integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
           crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <title>{{ title }}</title>
+    <title>{{ title }} | Fun & Learn English</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand, .nav-link, .navbar .btn-outline-primary, .navbar .btn-outline-danger {
+            color: white !important;
+        }
+
+        .navbar .btn-outline-primary {
+            border-color: white;
+            background: transparent;
+        }
+
+        .navbar .btn-outline-primary:hover {
+            background: white;
+            color: #2e7d32 !important;
+        }
+
+        .navbar .btn-outline-danger {
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+
+        .navbar .btn-outline-danger:hover {
+            background: #ff6b6b;
+            border-color: #ff6b6b;
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+            border: none;
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #388e3c 0%, #1b5e20 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 125, 50, 0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #388e3c 0%, #1b5e20 100%);
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+            border-radius: 15px 15px 0 0 !important;
+            color: white;
+        }
+
+        .card-header.bg-info {
+            background: linear-gradient(135deg, #0288d1 0%, #01579b 100%) !important;
+        }
+
+        .card-header.bg-success {
+            background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%) !important;
+        }
+
+        .btn-outline-primary {
+            border: 2px solid #43a047;
+            color: #43a047;
+            background: white;
+        }
+
+        .btn-outline-primary:hover {
+            background: #43a047;
+            color: white;
+            border-color: #43a047;
+        }
+
+        .text-success {
+            color: #2e7d32 !important;
+        }
+
+        .alert-success {
+            background: #e8f5e9;
+            border-color: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .alert-info {
+            background: #e1f5fe;
+            border-color: #b3e5fc;
+            color: #0277bd;
+        }
+
+        .badge-info {
+            background: #0288d1;
+        }
+
+        .badge-success {
+            background: #43a047;
+        }
+
+        .animate-fadeIn {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
 </head>
 <body>
 <header>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="/generate_idea">🎲 Генератор идей</a>
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-leaf"></i> FunLearn English
+            </a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -22,34 +156,49 @@
                 <ul class="navbar-nav mr-auto">
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="/generate_idea">✨ Главная</a>
+                            <a class="nav-link" href="/generate_idea">
+                                <i class="fas fa-magic"></i> Generator
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/public_ideas">💡 Идеи пользователей</a>
+                            <a class="nav-link" href="/public_ideas">
+                                <i class="fas fa-users"></i> Community
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/my_ideas">📝 Мои идеи</a>
+                            <a class="nav-link" href="/my_ideas">
+                                <i class="fas fa-bookmark"></i> My Ideas
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/my_favorites">❤️ Избранное</a>
+                            <a class="nav-link" href="/my_favorites">
+                                <i class="fas fa-heart"></i> Favorites
+                            </a>
                         </li>
                     {% endif %}
                 </ul>
                 <div class="ml-auto">
                     {% if current_user.is_authenticated %}
-                        <a class="btn btn-outline-primary" href="{{ url_for('profile', user_id=current_user.id) }}">
-                            👤 {{ current_user.name }}
+                        <a class="btn btn-outline-primary btn-sm rounded-pill" href="{{ url_for('profile', user_id=current_user.id) }}">
+                            <i class="fas fa-user-circle"></i> {{ current_user.name }}
                         </a>
-                        <a class="btn btn-outline-danger" href="/logout">Выйти</a>
+                        <a class="btn btn-outline-danger btn-sm rounded-pill ml-2" href="/logout">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
                     {% else %}
-                        <a class="btn btn-primary" href="/register">Зарегистрироваться</a>
-                        <a class="btn btn-success" href="/login">Войти</a>
+                        <a class="btn btn-outline-primary btn-sm rounded-pill" href="/register">
+                            <i class="fas fa-user-plus"></i> Sign Up
+                        </a>
+                        <a class="btn btn-primary btn-sm rounded-pill ml-2" href="/login">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
                     {% endif %}
                 </div>
             </div>
         </div>
     </nav>
 </header>
+
 <main role="main" class="container mt-4">
     {% block content %}{% endblock %}
 </main>

@@ -2,8 +2,8 @@
 
 {% block content %}
 <div class="container">
-    <h1 class="mb-4">💡 Идеи пользователей</h1>
-    
+    <h1 class="mb-4 text-success">💡 Community Ideas</h1>
+
     {% if ideas %}
         <div class="row">
             {% for idea in ideas %}
@@ -14,20 +14,15 @@
                     {% endif %}
                     <div class="card-body">
                         <h5 class="card-title text-success">{{ idea.title }}</h5>
-                        <p class="card-text">{{ idea.description }}</p>
+                        <p class="card-text">{{ idea.description[:150] }}{% if idea.description|length > 150 %}...{% endif %}</p>
                         <small class="text-muted">
-                            👤 {{ idea.author.name }} | 
+                            👤 {{ idea.author.name if idea.author else 'Anonymous' }} |
                             📅 {{ idea.created_date.strftime('%d.%m.%Y') }}
                         </small>
-                        {% if idea.joke %}
-                        <div class="alert alert-light mt-2 small">
-                            "{{ idea.joke[:100] }}{% if idea.joke|length > 100 %}...{% endif %}"
-                        </div>
-                        {% endif %}
                     </div>
                     <div class="card-footer bg-white">
-                        <button class="btn btn-outline-primary btn-sm" onclick="addToFavorites({{ idea.id }})">
-                            ❤️ В избранное
+                        <button class="btn btn-outline-success btn-sm" onclick="addToFavorites({{ idea.id }})">
+                            ❤️ Add to Favorites
                         </button>
                     </div>
                 </div>
@@ -36,7 +31,7 @@
         </div>
     {% else %}
         <div class="alert alert-info text-center">
-            Пока нет опубликованных идей. Будьте первым!
+            No published ideas yet. Be the first!
         </div>
     {% endif %}
 </div>
@@ -52,10 +47,14 @@ function addToFavorites(ideaId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('✅ Идея добавлена в избранное!');
+            alert('✅ Idea added to favorites!');
         } else {
-            alert(data.message || 'Ошибка');
+            alert(data.message || 'Error');
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error adding to favorites');
     });
 }
 </script>

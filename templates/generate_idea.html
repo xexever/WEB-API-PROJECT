@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
+<div class="container animate-fadeIn">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card shadow-lg mb-4">
@@ -29,7 +29,6 @@
                     <h3 class="mb-0">
                         {% if idea.category == 'food' %}🍕 Food
                         {% elif idea.category == 'joke' %}😂 Humor
-                        {% elif idea.category == 'random_data' %}🎲 Random Data
                         {% elif idea.category == 'advice' %}💡 Advice
                         {% elif idea.category == 'trivia' %}❓ Trivia
                         {% elif idea.category == 'name_info' %}📊 Name Analysis
@@ -38,22 +37,19 @@
                     </h3>
                 </div>
                 <div class="card-body">
-                    <!-- Image -->
                     {% if idea.image_url %}
                     <div class="text-center mb-4">
                         <img src="{{ idea.image_url }}"
                              class="img-fluid rounded shadow-sm"
-                             style="max-height: 400px; width: auto; object-fit: contain;"
+                             style="max-height: 300px; width: auto; object-fit: contain;"
                              alt="{{ idea.title }}"
                              loading="lazy"
-                             onerror="this.src='https://via.placeholder.com/800x400?text=Image+Not+Available'">
+                             onerror="this.style.display='none'">
                     </div>
                     {% endif %}
 
-                    <!-- Title -->
                     <h4 class="text-success text-center mb-3">{{ idea.title }}</h4>
 
-                    <!-- Description -->
                     {% if idea.category == 'joke' and idea.joke_setup %}
                     <div class="alert alert-light border mt-3">
                         <div class="text-center">
@@ -63,6 +59,7 @@
                             <p class="mb-0 h6 text-primary">{{ idea.joke_punchline }}</p>
                         </div>
                     </div>
+
                     {% elif idea.category == 'advice' %}
                     <div class="alert alert-light border mt-3">
                         <div class="text-center">
@@ -70,6 +67,7 @@
                             <p class="mb-0 font-italic h5">{{ idea.description }}</p>
                         </div>
                     </div>
+
                     {% elif idea.category == 'trivia' %}
                     <div class="alert alert-light border mt-3">
                         <div class="text-center">
@@ -82,11 +80,12 @@
                             </details>
                         </div>
                     </div>
+
                     {% elif idea.category == 'name_info' %}
                     <div class="alert alert-light border mt-3">
                         <div class="text-center">
                             <i class="fas fa-chart-bar fa-2x text-info mb-3"></i>
-                            <p class="mb-2 font-italic" style="white-space: pre-line;">{{ idea.description }}</p>
+                            <div style="white-space: pre-line;">{{ idea.description }}</div>
                             {% if idea.extra_info %}
                             <hr>
                             <small class="text-muted">{{ idea.extra_info }}</small>
@@ -97,20 +96,18 @@
                     <p class="lead text-center">{{ idea.description }}</p>
                     {% endif %}
 
-                    <!-- Extra Info -->
                     {% if idea.extra_info and idea.category != 'name_info' %}
                     <div class="alert alert-info mt-3">
                         <i class="fas fa-info-circle"></i> {{ idea.extra_info }}
                     </div>
                     {% endif %}
 
-                    <!-- Save Buttons -->
                     <div class="mt-4 d-flex gap-2 justify-content-center">
-                        <button class="btn btn-primary btn-lg mx-2" onclick="saveIdea(false)" style="min-width: 200px;">
+                        <button class="btn btn-primary btn-lg mx-2" onclick="saveIdea(false)" style="min-width: 200px;" id="saveToFavoritesBtn">
                             💾 Save to Favorites
                         </button>
-                        <button class="btn btn-success btn-lg mx-2" onclick="saveIdea(true)" style="min-width: 200px;">
-                            📢 Publish
+                        <button class="btn btn-success btn-lg mx-2" onclick="saveIdea(true)" style="min-width: 200px;" id="publishBtn">
+                            📢 Publish to Community
                         </button>
                     </div>
                 </div>
@@ -121,7 +118,9 @@
 </div>
 
 <script>
-// Loading animation
+// Состояние кнопки, чтобы избежать двойного сохранения
+let isSaving = false;
+
 document.getElementById('generateForm').addEventListener('submit', function() {
     const btn = document.getElementById('generateBtn');
     btn.disabled = true;
@@ -133,36 +132,98 @@ document.getElementById('generateForm').addEventListener('submit', function() {
 });
 
 function saveIdea(publish) {
-    const data = {{ idea|tojson|safe if idea else 'null' }};
-    if (!data) {
+    // Защита от двойного нажатия
+    if (isSaving) {
+        console.log('Already saving, please wait...');
+        return;
+    }
+
+    const ideaData = {{ idea|tojson|safe if idea else 'null' }};
+    if (!ideaData) {
         alert('No idea to save');
         return;
     }
 
-    data.is_published = publish;
+    // Отключаем кнопки во время сохранения
+    isSaving = true;
+    const favBtn = document.getElementById('saveToFavoritesBtn');
+    const pubBtn = document.getElementById('publishBtn');
+
+    if (favBtn) {
+        favBtn.disabled = true;
+        favBtn.innerHTML = '💾 Saving...';
+    }
+    if (pubBtn) {
+        pubBtn.disabled = true;
+        pubBtn.innerHTML = '📢 Publishing...';
+    }
+
+    // Создаем копию данных для отправки
+    const dataToSend = {
+        title: ideaData.title || 'New Idea',
+        description: ideaData.description || '',
+        category: ideaData.category || 'random',
+        joke: ideaData.joke || '',
+        image_url: ideaData.image_url || '',
+        is_published: publish
+    };
+
+    // Добавляем дополнительные поля для специфических категорий
+    if (ideaData.joke_setup) {
+        dataToSend.joke_setup = ideaData.joke_setup;
+        dataToSend.joke_punchline = ideaData.joke_punchline;
+    }
+    if (ideaData.correct_answer) {
+        dataToSend.correct_answer = ideaData.correct_answer;
+    }
+    if (ideaData.name_data) {
+        dataToSend.name_data = ideaData.name_data;
+    }
+
+    console.log('Saving idea:', dataToSend);
+    console.log('Publish mode:', publish ? 'PUBLISH' : 'FAVORITES');
 
     fetch('/save_idea', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(dataToSend)
     })
     .then(response => response.json())
     .then(data => {
+        console.log('Server response:', data);
         if (data.success) {
-            alert(publish ? '✨ Idea published!' : '💾 Idea saved to favorites!');
+            if (publish) {
+                alert('✨ Your idea has been published to the community! Check "My Ideas" page.');
+            } else {
+                alert('💾 Idea saved to your favorites! Check "Favorites" page.');
+            }
         } else {
-            alert('Error saving idea');
+            alert('Error saving idea: ' + (data.message || 'Unknown error'));
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while saving');
+        console.error('Fetch error:', error);
+        alert('An error occurred while saving. Please try again.');
+    })
+    .finally(() => {
+        // Включаем кнопки обратно через 1 секунду
+        setTimeout(() => {
+            isSaving = false;
+            if (favBtn) {
+                favBtn.disabled = false;
+                favBtn.innerHTML = '💾 Save to Favorites';
+            }
+            if (pubBtn) {
+                pubBtn.disabled = false;
+                pubBtn.innerHTML = '📢 Publish to Community';
+            }
+        }, 1000);
     });
 }
 
-// Auto-generate when category changes
+// Авто-генерация при смене категории
 document.getElementById('categorySelect').addEventListener('change', function() {
     document.getElementById('generateForm').submit();
 });
@@ -191,9 +252,10 @@ document.getElementById('categorySelect').addEventListener('change', function() 
     .btn:hover {
         transform: translateY(-2px);
     }
-    img {
-        max-width: 100%;
-        border-radius: 10px;
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
     }
     details summary {
         cursor: pointer;

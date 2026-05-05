@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request, make_response, jsonify, url_for
+from flask import Flask, render_template, redirect, request, make_response, jsonify, url_for, abort
 from data.users import User
 from forms.RegisterForm import RegisterForm
 from forms.LoginForm import LoginForm
@@ -12,7 +12,9 @@ from data import db_session
 import os
 from werkzeug.utils import secure_filename
 from PIL import Image
-from flask import abort
+
+# Создаем папку для базы данных
+os.makedirs('db', exist_ok=True)
 
 # Создаем приложение
 app = Flask(__name__)
@@ -70,7 +72,8 @@ def load_user(user_id):
 
 @app.route("/")
 def index():
-    return redirect('/generate_idea')
+    """Главная страница - лендинг"""
+    return render_template('index.html', title='FunLearn English')
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -78,15 +81,15 @@ def register():
     form = RegisterForm()
     if form.validate_on_submit():
         if form.password.data != form.password_again.data:
-            return render_template('register.html', title='Регистрация',
+            return render_template('register.html', title='Register',
                                    form=form,
-                                   message="Пароли не совпадают")
+                                   message="Passwords do not match")
 
         db_sess = db_session.create_session()
         if db_sess.query(User).filter(User.email == form.email.data).first():
-            return render_template('register.html', title='Регистрация',
+            return render_template('register.html', title='Register',
                                    form=form,
-                                   message="Такой пользователь уже есть")
+                                   message="User already exists")
 
         user = User(
             name=form.name.data,
@@ -106,7 +109,7 @@ def register():
 
         return redirect('/login')
 
-    return render_template('register.html', title='Регистрация', form=form)
+    return render_template('register.html', title='Register', form=form)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -119,9 +122,9 @@ def login():
             login_user(user, remember=form.remember_me.data)
             return redirect("/")
         return render_template('login.html',
-                               message="Неправильный логин или пароль",
+                               message="Invalid email or password",
                                form=form)
-    return render_template('login.html', title='Авторизация', form=form)
+    return render_template('login.html', title='Login', form=form)
 
 
 @app.route('/logout')
@@ -139,7 +142,17 @@ def profile(user_id):
     if not user:
         abort(404)
     can_edit = current_user.is_authenticated and current_user.id == user_id
-    return render_template('profile.html', user=user, can_edit=can_edit)
+
+    # Получаем все идеи пользователя (опубликованные)
+    user_ideas = db_sess.query(Idea).filter(
+        Idea.author_id == user_id,
+        Idea.is_published == True
+    ).order_by(Idea.created_date.desc()).all()
+
+    return render_template('profile.html',
+                           user=user,
+                           can_edit=can_edit,
+                           user_ideas=user_ideas)
 
 
 @app.route('/edit_profile', methods=['GET', 'POST'])
@@ -160,7 +173,7 @@ def edit_profile():
         if form.email.data and form.email.data != user.email:
             existing_user = db_sess.query(User).filter(User.email == form.email.data).first()
             if existing_user and existing_user.id != user.id:
-                return render_template('edit_profile.html', form=form, user=user, message="Email уже используется")
+                return render_template('edit_profile.html', form=form, user=user, message="Email already in use")
             user.email = form.email.data
         if form.about.data != user.about:
             user.about = form.about.data
@@ -189,8 +202,8 @@ def change_password():
         if user.check_password(form.current_password.data):
             user.set_password(form.new_password.data)
             db_sess.commit()
-            return jsonify({'success': True, 'message': 'Пароль изменен'})
-        return jsonify({'success': False, 'message': 'Неверный пароль'}), 400
+            return jsonify({'success': True, 'message': 'Password changed successfully'})
+        return jsonify({'success': False, 'message': 'Invalid current password'}), 400
 
     errors = {field: err for field, err in form.errors.items()}
     return jsonify({'success': False, 'errors': errors}), 400
@@ -209,7 +222,7 @@ def delete_avatar():
         user.avatar = '/static/default_avatar.png'
         db_sess.commit()
         return jsonify({'success': True})
-    return jsonify({'success': False, 'message': 'Аватар не найден'}), 400
+    return jsonify({'success': False, 'message': 'Avatar not found'}), 400
 
 
 # ==================== ГЕНЕРАТОР ИДЕЙ ====================
@@ -229,7 +242,7 @@ def generate_idea():
     return render_template('generate_idea.html',
                            form=form,
                            idea=idea_data,
-                           title='Генератор идей')
+                           title='Idea Generator')
 
 
 @app.route('/save_idea', methods=['POST'])
@@ -237,21 +250,55 @@ def generate_idea():
 def save_idea():
     data = request.json
 
+    db_sess = db_session.create_session()
+
+    # Создаем описание для сохранения
+    description = data.get('description', '')
+    if data.get('category') == 'joke':
+        description = f"{data.get('joke_setup', '')} - {data.get('joke_punchline', '')}"
+    elif data.get('category') == 'name_info' and data.get('name_data'):
+        name_data = data.get('name_data', {})
+        description = f"Analysis for {name_data.get('full_name', name_data.get('first_name', ''))}"
+
+    # Проверяем, публикуется идея или сохраняется в избранное
+    is_published = data.get('is_published', False)
+
     idea = Idea(
-        title=data.get('title'),
-        description=data.get('description'),
-        category=data.get('category'),
-        joke=data.get('joke'),
-        image_url=data.get('image_url'),
+        title=data.get('title', 'New Idea'),
+        description=description,
+        category=data.get('category', 'random'),
+        joke=data.get('joke', ''),
+        image_url=data.get('image_url', ''),
         author_id=current_user.id,
-        is_published=data.get('is_published', False)
+        is_published=is_published  # True - публикуем, False - только в избранное
     )
 
-    db_sess = db_session.create_session()
     db_sess.add(idea)
     db_sess.commit()
+    db_sess.refresh(idea)  # Обновляем объект чтобы получить id
 
-    return jsonify({'success': True, 'idea_id': idea.id})
+    # Получаем пользователя в этой же сессии
+    user = db_sess.query(User).filter(User.id == current_user.id).first()
+
+    # Если НЕ публикация (сохраняем в избранное) - добавляем в избранное
+    if not is_published:
+        if idea not in user.favorite_ideas:
+            user.favorite_ideas.append(idea)
+            db_sess.commit()
+            print(f"[FAVORITES] Idea {idea.id} '{idea.title}' added to favorites for user {user.name}")
+        else:
+            print(f"[FAVORITES] Idea {idea.id} already in favorites for user {user.name}")
+    else:
+        print(f"[PUBLISH] Idea {idea.id} '{idea.title}' published by user {user.name}")
+
+    db_sess.close()
+
+    return jsonify({
+        'success': True,
+        'idea_id': idea.id,
+        'saved_to_favorites': not is_published,
+        'published': is_published
+    })
 
 
 @app.route('/add_to_favorites/<int:idea_id>', methods=['POST'])
@@ -260,23 +307,28 @@ def add_to_favorites(idea_id):
     db_sess = db_session.create_session()
     idea = db_sess.query(Idea).filter(Idea.id == idea_id).first()
 
-    if idea:
-        if idea not in current_user.favorite_ideas:
-            current_user.favorite_ideas.append(idea)
-            db_sess.commit()
-            return jsonify({'success': True, 'message': 'Идея добавлена в избранное'})
-        else:
-            return jsonify({'success': False, 'message': 'Идея уже в избранном'}), 400
+    # Загружаем пользователя заново в этой сессии
+    user = db_sess.query(User).filter(User.id == current_user.id).first()
 
-    return jsonify({'success': False, 'message': 'Идея не найдена'}), 404
+    if idea:
+        if idea not in user.favorite_ideas:
+            user.favorite_ideas.append(idea)
+            db_sess.commit()
+            return jsonify({'success': True, 'message': 'Idea added to favorites'})
+        else:
+            return jsonify({'success': False, 'message': 'Idea already in favorites'}), 400
+
+    return jsonify({'success': False, 'message': 'Idea not found'}), 404
 
 
 @app.route('/my_favorites')
 @login_required
 def my_favorites():
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).filter(User.id == current_user.id).first()
     return render_template('my_favorites.html',
-                           ideas=current_user.favorite_ideas,
-                           title='Избранное')
+                           ideas=user.favorite_ideas,
+                           title='My Favorites')
 
 
 @app.route('/public_ideas')
@@ -284,7 +336,7 @@ def my_favorites():
 def public_ideas():
     db_sess = db_session.create_session()
     ideas = db_sess.query(Idea).filter(Idea.is_published == True).order_by(Idea.created_date.desc()).all()
-    return render_template('public_ideas.html', ideas=ideas, title='Идеи пользователей')
+    return render_template('public_ideas.html', ideas=ideas, title='Community Ideas')
 
 
 @app.route('/my_ideas')
@@ -292,7 +344,7 @@ def public_ideas():
 def my_ideas():
     db_sess = db_session.create_session()
     ideas = db_sess.query(Idea).filter(Idea.author_id == current_user.id, Idea.is_published == True).all()
-    return render_template('my_ideas.html', ideas=ideas, title='Мои идеи')
+    return render_template('my_ideas.html', ideas=ideas, title='My Ideas')
 
 
 # ==================== ОБРАБОТЧИКИ ОШИБОК ====================

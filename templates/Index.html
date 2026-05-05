@@ -2,12 +2,52 @@
 
 {% block content %}
 <div class="container text-center mt-5">
-    <div class="jumbotron">
-        <h1 class="display-4">🎲 Генератор идей</h1>
-        <p class="lead">Не знаете, чем заняться? Нажмите кнопку ниже!</p>
+    <div class="jumbotron bg-white shadow-lg p-5 animate-fadeIn" style="border-radius: 20px;">
+        <i class="fas fa-leaf" style="font-size: 4rem; color: #43a047;"></i>
+        <h1 class="display-4 mt-3" style="color: #2e7d32;">🎲 FunLearn English</h1>
+        <p class="lead mt-3">Learn English while having fun! Generate random ideas, discover new things, and improve your vocabulary.</p>
         <hr class="my-4">
-        <p>Генерируйте случайные идеи, сохраняйте в избранное и делитесь с другими!</p>
-        <a class="btn btn-success btn-lg" href="/generate_idea" role="button">Начать генерацию 🚀</a>
+        <div class="row mt-4">
+            <div class="col-md-3 mb-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <i class="fas fa-utensils fa-2x text-success mb-2"></i>
+                        <h5>🍕 Recipes</h5>
+                        <small class="text-muted">Learn cooking vocabulary</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <i class="fas fa-smile fa-2x text-success mb-2"></i>
+                        <h5>😂 Jokes</h5>
+                        <small class="text-muted">Practice English humor</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <i class="fas fa-lightbulb fa-2x text-success mb-2"></i>
+                        <h5>💡 Advice</h5>
+                        <small class="text-muted">Get daily wisdom</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <i class="fas fa-question-circle fa-2x text-success mb-2"></i>
+                        <h5>❓ Trivia</h5>
+                        <small class="text-muted">Test your knowledge</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <a class="btn btn-success btn-lg rounded-pill px-5 mt-3" href="/generate_idea" role="button">
+            🚀 Start Generating Now
+        </a>
     </div>
 </div>
 {% endblock %}
