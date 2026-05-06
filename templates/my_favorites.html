@@ -2,27 +2,46 @@
 
 {% block content %}
 <div class="container">
-    <h1 class="mb-4">❤️ Мои избранные идеи</h1>
-    
+    <h1 class="mb-4 text-success">
+        <i class="fas fa-heart"></i> My Favorites
+    </h1>
+
     {% if ideas %}
         <div class="row">
             {% for idea in ideas %}
             <div class="col-md-6 mb-4">
-                <div class="card h-100 shadow-sm">
+                <div class="card h-100 shadow-sm animate-fadeIn" id="idea-card-{{ idea.id }}">
                     {% if idea.image_url %}
                     <img src="{{ idea.image_url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ idea.title }}">
                     {% endif %}
                     <div class="card-body">
-                        <h5 class="card-title text-success">{{ idea.title }}</h5>
-                        <p class="card-text">{{ idea.description }}</p>
-                        <small class="text-muted">
-                            👤 {{ idea.author.name if idea.author else 'Аноним' }}
-                        </small>
-                        {% if idea.joke %}
-                        <div class="alert alert-light mt-2 small">
-                            "{{ idea.joke[:100] }}{% if idea.joke|length > 100 %}...{% endif %}"
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge badge-success">{{ idea.category }}</span>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteFromFavorites({{ idea.id }})" title="Remove from favorites">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
                         </div>
-                        {% endif %}
+
+                        <h5 class="card-title text-success">{{ idea.title }}</h5>
+                        <p class="card-text">{{ idea.description[:200] }}{% if idea.description|length > 200 %}...{% endif %}</p>
+
+                        <!-- Автор с аватаром -->
+                        <div class="d-flex align-items-center mt-2 mb-2">
+                            {% if idea.author and idea.author.avatar %}
+                                <img src="{{ idea.author.avatar }}" class="rounded-circle mr-2" style="width: 30px; height: 30px; object-fit: cover;">
+                            {% else %}
+                                <div class="rounded-circle bg-secondary mr-2 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+                                    <i class="fas fa-user fa-sm text-white"></i>
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">
+                                by {{ idea.author.name if idea.author else 'Anonymous' }}
+                            </small>
+                        </div>
+
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-alt"></i> {{ idea.created_date.strftime('%d.%m.%Y') }}
+                        </small>
                     </div>
                 </div>
             </div>
@@ -30,8 +49,69 @@
         </div>
     {% else %}
         <div class="alert alert-info text-center">
-            У вас пока нет избранных идей. Перейдите в <a href="/generate_idea">генератор идей</a> или <a href="/public_ideas">публичные идеи</a>!
+            <i class="fas fa-heart-broken fa-3x mb-3"></i>
+            <h4>No favorite ideas yet</h4>
+            <p>Go to <a href="/generate_idea">Idea Generator</a> and save some ideas to favorites!</p>
+            <a href="/generate_idea" class="btn btn-success mt-2">✨ Generate Ideas</a>
         </div>
     {% endif %}
 </div>
+
+<script>
+function deleteFromFavorites(ideaId) {
+    if (confirm('Are you sure you want to remove this idea from favorites?')) {
+        fetch(`/delete_from_favorites/${ideaId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Анимация удаления
+                const card = document.getElementById(`idea-card-${ideaId}`);
+                if (card) {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(-20px)';
+                    setTimeout(() => {
+                        card.remove();
+                        // Проверяем, остались ли еще идеи
+                        const remainingCards = document.querySelectorAll('[id^="idea-card-"]').length;
+                        if (remainingCards === 0) {
+                            location.reload(); // Перезагружаем страницу если идей нет
+                        }
+                    }, 300);
+                }
+                alert('✅ ' + data.message);
+            } else {
+                alert('❌ ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error removing from favorites');
+        });
+    }
+}
+</script>
+
+<style>
+    .animate-fadeIn {
+        animation: fadeIn 0.5s ease-in;
+    }
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    [id^="idea-card-"] {
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+</style>
 {% endblock %}

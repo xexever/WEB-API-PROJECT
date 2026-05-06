@@ -13,23 +13,18 @@ import os
 from werkzeug.utils import secure_filename
 from PIL import Image
 
-# Создаем папку для базы данных
 os.makedirs('db', exist_ok=True)
 
-# Создаем приложение
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 
-# Конфигурация для загрузки файлов
 UPLOAD_FOLDER = 'static/uploads/avatars'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
-# Создаем папку для аватаров
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Инициализация LoginManager
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -67,8 +62,6 @@ def load_user(user_id):
     db_sess = db_session.create_session()
     return db_sess.get(User, user_id)
 
-
-# ==================== ОСНОВНЫЕ МАРШРУТЫ ====================
 
 @app.route("/")
 def index():
@@ -143,7 +136,6 @@ def profile(user_id):
         abort(404)
     can_edit = current_user.is_authenticated and current_user.id == user_id
 
-    # Получаем все идеи пользователя (опубликованные)
     user_ideas = db_sess.query(Idea).filter(
         Idea.author_id == user_id,
         Idea.is_published == True
@@ -225,13 +217,10 @@ def delete_avatar():
     return jsonify({'success': False, 'message': 'Avatar not found'}), 400
 
 
-# ==================== ГЕНЕРАТОР ИДЕЙ ====================
-
 @app.route('/generate_idea', methods=['GET', 'POST'])
 @login_required
 def generate_idea():
     form = GenerateIdeaForm()
-    idea_data = None
 
     if request.method == 'POST':
         category = form.category.data
@@ -252,7 +241,6 @@ def save_idea():
 
     db_sess = db_session.create_session()
 
-    # Создаем описание для сохранения
     description = data.get('description', '')
     if data.get('category') == 'joke':
         description = f"{data.get('joke_setup', '')} - {data.get('joke_punchline', '')}"
@@ -260,7 +248,6 @@ def save_idea():
         name_data = data.get('name_data', {})
         description = f"Analysis for {name_data.get('full_name', name_data.get('first_name', ''))}"
 
-    # Проверяем, публикуется идея или сохраняется в избранное
     is_published = data.get('is_published', False)
 
     idea = Idea(
@@ -270,17 +257,15 @@ def save_idea():
         joke=data.get('joke', ''),
         image_url=data.get('image_url', ''),
         author_id=current_user.id,
-        is_published=is_published  # True - публикуем, False - только в избранное
+        is_published=is_published
     )
 
     db_sess.add(idea)
     db_sess.commit()
-    db_sess.refresh(idea)  # Обновляем объект чтобы получить id
+    db_sess.refresh(idea)
 
-    # Получаем пользователя в этой же сессии
     user = db_sess.query(User).filter(User.id == current_user.id).first()
 
-    # Если НЕ публикация (сохраняем в избранное) - добавляем в избранное
     if not is_published:
         if idea not in user.favorite_ideas:
             user.favorite_ideas.append(idea)
@@ -307,7 +292,6 @@ def add_to_favorites(idea_id):
     db_sess = db_session.create_session()
     idea = db_sess.query(Idea).filter(Idea.id == idea_id).first()
 
-    # Загружаем пользователя заново в этой сессии
     user = db_sess.query(User).filter(User.id == current_user.id).first()
 
     if idea:
@@ -347,7 +331,36 @@ def my_ideas():
     return render_template('my_ideas.html', ideas=ideas, title='My Ideas')
 
 
-# ==================== ОБРАБОТЧИКИ ОШИБОК ====================
+@app.route('/delete_from_favorites/<int:idea_id>', methods=['DELETE'])
+@login_required
+def delete_from_favorites(idea_id):
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).filter(User.id == current_user.id).first()
+    idea = db_sess.query(Idea).filter(Idea.id == idea_id).first()
+
+    if idea and idea in user.favorite_ideas:
+        user.favorite_ideas.remove(idea)
+        db_sess.commit()
+        return jsonify({'success': True, 'message': 'Idea removed from favorites'})
+
+    return jsonify({'success': False, 'message': 'Idea not found in favorites'}), 404
+
+
+@app.route('/delete_my_idea/<int:idea_id>', methods=['DELETE'])
+@login_required
+def delete_my_idea(idea_id):
+    db_sess = db_session.create_session()
+    idea = db_sess.query(Idea).filter(Idea.id == idea_id, Idea.author_id == current_user.id).first()
+
+    if idea:
+        for user in idea.favorited_by:
+            user.favorite_ideas.remove(idea)
+        db_sess.delete(idea)
+        db_sess.commit()
+        return jsonify({'success': True, 'message': 'Idea deleted successfully'})
+
+    return jsonify({'success': False, 'message': 'Idea not found or you are not the author'}), 404
+
 
 @app.errorhandler(404)
 def not_found(error):
@@ -361,8 +374,7 @@ def bad_request(_):
 
 def main():
     db_session.global_init("db/blogs.db")
-    app.run(debug=True)
-
+    app.run(debug=True, threaded=True, host='0.0.0.0', port=5000)
 
 if __name__ == '__main__':
     main()

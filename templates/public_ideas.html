@@ -2,23 +2,49 @@
 
 {% block content %}
 <div class="container">
-    <h1 class="mb-4 text-success">💡 Community Ideas</h1>
+    <h1 class="mb-4 text-success">
+        <i class="fas fa-users"></i> Community Ideas
+    </h1>
 
     {% if ideas %}
         <div class="row">
             {% for idea in ideas %}
             <div class="col-md-6 mb-4">
-                <div class="card h-100 shadow-sm">
+                <div class="card h-100 shadow-sm animate-fadeIn" id="idea-card-{{ idea.id }}">
                     {% if idea.image_url %}
                     <img src="{{ idea.image_url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ idea.title }}">
                     {% endif %}
                     <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge badge-success">{{ idea.category }}</span>
+                            {% if current_user.id == idea.author_id %}
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteMyIdea({{ idea.id }})" title="Delete my idea">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+
                         <h5 class="card-title text-success">{{ idea.title }}</h5>
-                        <p class="card-text">{{ idea.description[:150] }}{% if idea.description|length > 150 %}...{% endif %}</p>
-                        <small class="text-muted">
-                            👤 {{ idea.author.name if idea.author else 'Anonymous' }} |
-                            📅 {{ idea.created_date.strftime('%d.%m.%Y') }}
-                        </small>
+                        <p class="card-text">{{ idea.description[:200] }}{% if idea.description|length > 200 %}...{% endif %}</p>
+
+                        <!-- Автор с аватаром -->
+                        <div class="d-flex align-items-center justify-content-between mt-2 mb-2">
+                            <div class="d-flex align-items-center">
+                                {% if idea.author and idea.author.avatar %}
+                                    <img src="{{ idea.author.avatar }}" class="rounded-circle mr-2" style="width: 30px; height: 30px; object-fit: cover;">
+                                {% else %}
+                                    <div class="rounded-circle bg-secondary mr-2 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+                                        <i class="fas fa-user fa-sm text-white"></i>
+                                    </div>
+                                {% endif %}
+                                <small class="text-muted">
+                                    {{ idea.author.name if idea.author else 'Anonymous' }}
+                                </small>
+                            </div>
+                            <small class="text-muted">
+                                <i class="fas fa-calendar-alt"></i> {{ idea.created_date.strftime('%d.%m.%Y') }}
+                            </small>
+                        </div>
                     </div>
                     <div class="card-footer bg-white">
                         <button class="btn btn-outline-success btn-sm" onclick="addToFavorites({{ idea.id }})">
@@ -31,7 +57,10 @@
         </div>
     {% else %}
         <div class="alert alert-info text-center">
-            No published ideas yet. Be the first!
+            <i class="fas fa-lightbulb fa-3x mb-3"></i>
+            <h4>No published ideas yet</h4>
+            <p>Be the first to share your ideas with the community!</p>
+            <a href="/generate_idea" class="btn btn-success mt-2">✨ Create & Publish</a>
         </div>
     {% endif %}
 </div>
@@ -47,9 +76,9 @@ function addToFavorites(ideaId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('✅ Idea added to favorites!');
+            alert('✅ ' + data.message);
         } else {
-            alert(data.message || 'Error');
+            alert('❌ ' + data.message);
         }
     })
     .catch(error => {
@@ -57,5 +86,65 @@ function addToFavorites(ideaId) {
         alert('Error adding to favorites');
     });
 }
+
+function deleteMyIdea(ideaId) {
+    if (confirm('Are you sure you want to delete this idea? This action cannot be undone.')) {
+        fetch(`/delete_my_idea/${ideaId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Анимация удаления
+                const card = document.getElementById(`idea-card-${ideaId}`);
+                if (card) {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(-20px)';
+                    setTimeout(() => {
+                        card.remove();
+                        // Проверяем, остались ли еще идеи
+                        const remainingCards = document.querySelectorAll('[id^="idea-card-"]').length;
+                        if (remainingCards === 0) {
+                            location.reload(); // Перезагружаем страницу если идей нет
+                        }
+                    }, 300);
+                }
+                alert('✅ ' + data.message);
+            } else {
+                alert('❌ ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting idea');
+        });
+    }
+}
 </script>
+
+<style>
+    .animate-fadeIn {
+        animation: fadeIn 0.5s ease-in;
+    }
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    [id^="idea-card-"] {
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .btn-outline-success:hover {
+        background-color: #28a745;
+        color: white;
+    }
+</style>
 {% endblock %}

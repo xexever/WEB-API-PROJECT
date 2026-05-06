@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from sqlalchemy_serializer import SerializerMixin
 
-# Таблица для связи "избранное" (многие ко многим) - ТОЛЬКО ЗДЕСЬ
+
 favorite_ideas = Table(
     'favorite_ideas',
     SqlAlchemyBase.metadata,
@@ -26,8 +26,6 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     created_date = Column(DateTime, default=datetime.datetime.now)
     avatar = Column(String, nullable=True, default='/static/default_avatar.png')
 
-    # Связи
-    news = orm.relationship("News", back_populates='user')
     published_ideas = orm.relationship("Idea", foreign_keys='Idea.author_id', back_populates='author')
     favorite_ideas = orm.relationship("Idea", secondary=favorite_ideas, back_populates='favorited_by')
 
