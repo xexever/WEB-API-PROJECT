@@ -25,7 +25,6 @@
                         <h5 class="card-title text-success">{{ idea.title }}</h5>
                         <p class="card-text">{{ idea.description[:200] }}{% if idea.description|length > 200 %}...{% endif %}</p>
 
-                        <!-- Автор с аватаром -->
                         <div class="d-flex align-items-center justify-content-between mt-2 mb-2">
                             <div class="d-flex align-items-center">
                                 {% if idea.author and idea.author.avatar %}
@@ -59,7 +58,7 @@
             <i class="fas fa-lightbulb fa-3x mb-3"></i>
             <h4>No published ideas yet</h4>
             <p>Go to <a href="/generate_idea">Idea Generator</a> and publish your first idea!</p>
-            <a href="/generate_idea" class="btn btn-success mt-2">✨ Generate & Publish</a>
+            <a href="/generate_idea" class="btn btn-success mt-2">Generate & Publish</a>
         </div>
     {% endif %}
 </div>
@@ -90,9 +89,9 @@ function deleteMyIdea(ideaId) {
                         }
                     }, 300);
                 }
-                alert('✅ ' + data.message);
+                alert(data.message);
             } else {
-                alert('❌ ' + data.message);
+                alert(data.message);
             }
         })
         .catch(error => {

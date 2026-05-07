@@ -52,7 +52,7 @@
             <i class="fas fa-heart-broken fa-3x mb-3"></i>
             <h4>No favorite ideas yet</h4>
             <p>Go to <a href="/generate_idea">Idea Generator</a> and save some ideas to favorites!</p>
-            <a href="/generate_idea" class="btn btn-success mt-2">✨ Generate Ideas</a>
+            <a href="/generate_idea" class="btn btn-success mt-2">Generate Ideas</a>
         </div>
     {% endif %}
 </div>
@@ -83,9 +83,9 @@ function deleteFromFavorites(ideaId) {
                         }
                     }, 300);
                 }
-                alert('✅ ' + data.message);
+                alert(data.message);
             } else {
-                alert('❌ ' + data.message);
+                alert(data.message);
             }
         })
         .catch(error => {

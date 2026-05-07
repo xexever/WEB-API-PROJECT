@@ -16,7 +16,7 @@ from PIL import Image
 os.makedirs('db', exist_ok=True)
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
+app.config['SECRET_KEY'] = 'xadktbtidcxrhdbjrwhdcxrpcsbtipaaddzrjitidvtiwtg'
 
 UPLOAD_FOLDER = 'static/uploads/avatars'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -65,7 +65,7 @@ def load_user(user_id):
 
 @app.route("/")
 def index():
-    """Главная страница - лендинг"""
+    """Главная страница"""
     return render_template('index.html', title='FunLearn English')
 
 

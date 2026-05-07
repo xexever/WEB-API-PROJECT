@@ -6,7 +6,7 @@
         <div class="col-md-8">
             <div class="card shadow-lg mb-4">
                 <div class="card-header bg-success text-white text-center">
-                    <h2>🎲 Idea Generator</h2>
+                    <h2>Idea Generator</h2>
                     <p class="mb-0">Choose a category and get inspired!</p>
                 </div>
                 <div class="card-body">
@@ -17,7 +17,7 @@
                             {{ form.category(class="form-control", id="categorySelect") }}
                         </div>
                         <button type="submit" class="btn btn-success btn-lg btn-block mt-3 w-100" id="generateBtn">
-                            🎲 Generate
+                            Generate
                         </button>
                     </form>
                 </div>
@@ -27,12 +27,12 @@
             <div class="card shadow-lg" id="ideaCard">
                 <div class="card-header bg-info text-white">
                     <h3 class="mb-0">
-                        {% if idea.category == 'food' %}🍕 Food
-                        {% elif idea.category == 'joke' %}😂 Humor
-                        {% elif idea.category == 'advice' %}💡 Advice
-                        {% elif idea.category == 'trivia' %}❓ Trivia
-                        {% elif idea.category == 'name_info' %}📊 Name Analysis
-                        {% else %}💡 Idea
+                        {% if idea.category == 'food' %}Food
+                        {% elif idea.category == 'joke' %}Humor
+                        {% elif idea.category == 'advice' %}Advice
+                        {% elif idea.category == 'trivia' %}Trivia
+                        {% elif idea.category == 'name_info' %}Name Analysis
+                        {% else %}Idea
                         {% endif %}
                     </h3>
                 </div>
@@ -104,10 +104,10 @@
 
                     <div class="mt-4 d-flex gap-2 justify-content-center">
                         <button class="btn btn-primary btn-lg mx-2" onclick="saveIdea(false)" style="min-width: 200px;" id="saveToFavoritesBtn">
-                            💾 Save to Favorites
+                            Save to Favorites
                         </button>
                         <button class="btn btn-success btn-lg mx-2" onclick="saveIdea(true)" style="min-width: 200px;" id="publishBtn">
-                            📢 Publish to Community
+                            Publish to Community
                         </button>
                     </div>
                 </div>
@@ -127,7 +127,7 @@ document.getElementById('generateForm').addEventListener('submit', function() {
     btn.innerHTML = '⏳ Generating...';
     setTimeout(() => {
         btn.disabled = false;
-        btn.innerHTML = '🎲 Generate';
+        btn.innerHTML = 'Generate';
     }, 2000);
 });
 
@@ -151,11 +151,11 @@ function saveIdea(publish) {
 
     if (favBtn) {
         favBtn.disabled = true;
-        favBtn.innerHTML = '💾 Saving...';
+        favBtn.innerHTML = 'Saving...';
     }
     if (pubBtn) {
         pubBtn.disabled = true;
-        pubBtn.innerHTML = '📢 Publishing...';
+        pubBtn.innerHTML = 'Publishing...';
     }
 
     // Создаем копию данных для отправки
@@ -195,9 +195,9 @@ function saveIdea(publish) {
         console.log('Server response:', data);
         if (data.success) {
             if (publish) {
-                alert('✨ Your idea has been published to the community! Check "My Ideas" page.');
+                alert('Your idea has been published to the community! Check "My Ideas" page.');
             } else {
-                alert('💾 Idea saved to your favorites! Check "Favorites" page.');
+                alert('Idea saved to your favorites! Check "Favorites" page.');
             }
         } else {
             alert('Error saving idea: ' + (data.message || 'Unknown error'));
@@ -213,17 +213,16 @@ function saveIdea(publish) {
             isSaving = false;
             if (favBtn) {
                 favBtn.disabled = false;
-                favBtn.innerHTML = '💾 Save to Favorites';
+                favBtn.innerHTML = 'Save to Favorites';
             }
             if (pubBtn) {
                 pubBtn.disabled = false;
-                pubBtn.innerHTML = '📢 Publish to Community';
+                pubBtn.innerHTML = 'Publish to Community';
             }
         }, 1000);
     });
 }
 
-// Авто-генерация при смене категории
 document.getElementById('categorySelect').addEventListener('change', function() {
     document.getElementById('generateForm').submit();
 });
