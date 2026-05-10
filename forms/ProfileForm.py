@@ -12,7 +12,7 @@ class ProfileForm(FlaskForm):
     submit = SubmitField('Сохранить изменения')
 
 
-class PasswordChangeForm(FlaskForm):  # 👈 ЭТОТ КЛАСС ДОЛЖЕН БЫТЬ
+class PasswordChangeForm(FlaskForm):
     current_password = PasswordField('Текущий пароль', validators=[DataRequired()])
     new_password = PasswordField('Новый пароль', validators=[DataRequired(), Length(min=6, message='Пароль должен быть не менее 6 символов')])
     confirm_password = PasswordField('Подтвердите пароль', validators=[DataRequired(), EqualTo('new_password', message='Пароли не совпадают')])

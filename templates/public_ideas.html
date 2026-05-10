@@ -11,9 +11,6 @@
             {% for idea in ideas %}
             <div class="col-md-6 mb-4">
                 <div class="card h-100 shadow-sm animate-fadeIn" id="idea-card-{{ idea.id }}">
-                    {% if idea.image_url %}
-                    <img src="{{ idea.image_url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ idea.title }}">
-                    {% endif %}
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <span class="badge badge-success">{{ idea.category }}</span>
@@ -27,7 +24,6 @@
                         <h5 class="card-title text-success">{{ idea.title }}</h5>
                         <p class="card-text">{{ idea.description[:200] }}{% if idea.description|length > 200 %}...{% endif %}</p>
 
-                        <!-- Автор с аватаром -->
                         <div class="d-flex align-items-center justify-content-between mt-2 mb-2">
                             <div class="d-flex align-items-center">
                                 {% if idea.author and idea.author.avatar %}

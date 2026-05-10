@@ -8,7 +8,7 @@ import re
 class RegisterForm(FlaskForm):
     email = EmailField('Почта', validators=[
         DataRequired(message="Email обязателен"),
-        Email(message="Некорректный email адрес")  # ✅ Это работает с EmailField
+        Email(message="Некорректный email адрес")
     ])
     password = PasswordField('Пароль', validators=[
         DataRequired(message="Пароль обязателен"),
@@ -28,8 +28,6 @@ class RegisterForm(FlaskForm):
     ])
     submit = SubmitField('Зарегистрироваться')
 
-    # Дополнительная кастомная валидация email
     def validate_email(self, field):
-        # Простая проверка на допустимые символы
         if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', field.data):
             raise ValidationError('Введите корректный email адрес')

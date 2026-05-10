@@ -31,7 +31,6 @@ class APIService:
                         'title': meal.get('strMeal', 'Delicious Dish'),
                         'description': f"Cuisine: {meal.get('strArea', 'Various')} | Category: {meal.get('strCategory', 'Various')}",
                         'extra_info': f"Ingredients: {', '.join(ingredients[:3])}",
-                        'image_url': meal.get('strMealThumb', '')
                     }
         except Exception as e:
             print(f"MealDB error: {e}")
@@ -48,7 +47,6 @@ class APIService:
             'title': recipe['title'],
             'description': recipe['description'],
             'extra_info': f"Ingredients: {recipe['ingredients']}",
-            'image_url': ''
         }
 
     @staticmethod
@@ -66,12 +64,11 @@ class APIService:
             print(f"Joke API error: {e}")
 
         jokes = [
-            {"setup": "Why do programmers prefer dark mode?", "punchline": "Because light attracts bugs"},
-            {"setup": "What do you call a programmer who is afraid of the dark?", "punchline": "A light-year"},
-            {"setup": "Why did the developer go broke?", "punchline": "Because he used up all his cache"},
-            {"setup": "What's a programmer's favorite hangout place?", "punchline": "The Foo Bar"},
-            {"setup": "Why do programmers always mix up Halloween and Christmas?",
-             "punchline": "Because Oct 31 = Dec 25"},
+            {"setup": "Why did the chicken cross the road?", "punchline": "To get to the other side"},
+            {"setup": "What do you call a fake noodle?", "punchline": "An impasta"},
+            {"setup": "Why don't scientists trust atoms?", "punchline": "Because they make up everything"},
+            {"setup": "What do you get when you cross a snowman and a vampire?", "punchline": "Frostbite"},
+            {"setup": "Why did the scarecrow win an award?", "punchline": "Because he was outstanding in his field"},
         ]
         return random.choice(jokes)
 
@@ -87,7 +84,6 @@ class APIService:
                     'title': 'Wise Advice',
                     'description': f'"{advice}"',
                     'extra_info': 'Advice for all occasions',
-                    'image_url': ''
                 }
         except Exception as e:
             print(f"Advice API error: {e}")
@@ -103,7 +99,6 @@ class APIService:
             'title': 'Simple Advice',
             'description': f'"{random.choice(local_advice)}"',
             'extra_info': 'Advice of the day',
-            'image_url': ''
         }
 
     @staticmethod
@@ -121,7 +116,6 @@ class APIService:
                         'description': html.unescape(q.get('question', '')),
                         'correct_answer': html.unescape(q.get('correct_answer', '')),
                         'difficulty': q.get('difficulty', 'medium'),
-                        'image_url': ''
                     }
         except Exception as e:
             print(f"Trivia API error: {e}")
@@ -137,7 +131,6 @@ class APIService:
             'description': q['question'],
             'correct_answer': q['answer'],
             'difficulty': 'medium',
-            'image_url': ''
         }
 
     @staticmethod
@@ -209,7 +202,6 @@ class APIService:
             'title': f"Name Analysis: {result['name']}",
             'description': '\n'.join(description_lines),
             'extra_info': 'Based on statistical data from social networks',
-            'image_url': '',
             'name_data': result
         }
 
@@ -230,8 +222,7 @@ class APIService:
             return {
                 'title': data.get('title', 'Cook Something Delicious'),
                 'description': data.get('description', 'Try a new recipe'),
-                'category': 'food',
-                'image_url': data.get('image_url', ''),
+                # 'image_url' УДАЛЕН
                 'extra_info': data.get('extra_info', ''),
             }
 
@@ -244,7 +235,6 @@ class APIService:
                 'category': 'joke',
                 'joke_setup': data.get('setup', ''),
                 'joke_punchline': data.get('punchline', ''),
-                'image_url': '',
             }
 
         # Совет
@@ -255,7 +245,6 @@ class APIService:
                 'description': data.get('description', ''),
                 'category': 'advice',
                 'extra_info': data.get('extra_info', ''),
-                'image_url': '',
             }
 
         # Викторина
@@ -268,7 +257,6 @@ class APIService:
                 'correct_answer': data.get('correct_answer', ''),
                 'difficulty': data.get('difficulty', ''),
                 'extra_info': f"Difficulty: {data.get('difficulty', 'medium')}",
-                'image_url': '',
             }
 
         # Анализ имени
@@ -279,14 +267,13 @@ class APIService:
                 'description': data.get('description', ''),
                 'category': 'name_info',
                 'extra_info': data.get('extra_info', ''),
-                'image_url': '',
+                # 'image_url' УДАЛЕН
                 'name_data': data.get('name_data', {})
             }
 
         # Запасной вариант
         return {
-            'title': 'Try Something New',
-            'description': 'Do something unusual today',
+            'title': 'Let\'s go watch the Sonic movie, there will be Metal Sonic!!',
+            'description': 'He\'s my favourite character, we can\'t miss that!',
             'category': 'random',
-            'image_url': ''
         }

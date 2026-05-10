@@ -60,7 +60,10 @@ def save_avatar(avatar_file, user_id):
 @login_manager.user_loader
 def load_user(user_id):
     db_sess = db_session.create_session()
-    return db_sess.get(User, user_id)
+    try:
+        return db_sess.get(User, user_id)
+    finally:
+        db_sess.close()  # ВАЖНО: закрываем сессию
 
 
 @app.route("/")
@@ -79,26 +82,29 @@ def register():
                                    message="Passwords do not match")
 
         db_sess = db_session.create_session()
-        if db_sess.query(User).filter(User.email == form.email.data).first():
-            return render_template('register.html', title='Register',
-                                   form=form,
-                                   message="User already exists")
+        try:
+            if db_sess.query(User).filter(User.email == form.email.data).first():
+                return render_template('register.html', title='Register',
+                                       form=form,
+                                       message="User already exists")
 
-        user = User(
-            name=form.name.data,
-            email=form.email.data,
-            about=form.about.data
-        )
-        user.set_password(form.password.data)
+            user = User(
+                name=form.name.data,
+                email=form.email.data,
+                about=form.about.data
+            )
+            user.set_password(form.password.data)
 
-        db_sess.add(user)
-        db_sess.commit()
+            db_sess.add(user)
+            db_sess.commit()
 
-        if form.avatar.data:
-            avatar_path = save_avatar(form.avatar.data, user.id)
-            if avatar_path:
-                user.avatar = avatar_path
-                db_sess.commit()
+            if form.avatar.data:
+                avatar_path = save_avatar(form.avatar.data, user.id)
+                if avatar_path:
+                    user.avatar = avatar_path
+                    db_sess.commit()
+        finally:
+            db_sess.close()
 
         return redirect('/login')
 
@@ -110,10 +116,13 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         db_sess = db_session.create_session()
-        user = db_sess.query(User).filter(User.email == form.email.data).first()
-        if user and user.check_password(form.password.data):
-            login_user(user, remember=form.remember_me.data)
-            return redirect("/")
+        try:
+            user = db_sess.query(User).filter(User.email == form.email.data).first()
+            if user and user.check_password(form.password.data):
+                login_user(user, remember=form.remember_me.data)
+                return redirect("/")
+        finally:
+            db_sess.close()
         return render_template('login.html',
                                message="Invalid email or password",
                                form=form)
@@ -131,20 +140,26 @@ def logout():
 @login_required
 def profile(user_id):
     db_sess = db_session.create_session()
-    user = db_sess.query(User).filter(User.id == user_id).first()
-    if not user:
-        abort(404)
-    can_edit = current_user.is_authenticated and current_user.id == user_id
+    try:
+        user = db_sess.query(User).filter(User.id == user_id).first()
+        if not user:
+            abort(404)
+        can_edit = current_user.is_authenticated and current_user.id == user_id
 
-    user_ideas = db_sess.query(Idea).filter(
-        Idea.author_id == user_id,
-        Idea.is_published == True
-    ).order_by(Idea.created_date.desc()).all()
+        user_ideas = db_sess.query(Idea).filter(
+            Idea.author_id == user_id,
+            Idea.is_published == True
+        ).order_by(Idea.created_date.desc()).all()
 
-    return render_template('profile.html',
-                           user=user,
-                           can_edit=can_edit,
-                           user_ideas=user_ideas)
+        user_favorites = user.favorite_ideas
+
+        return render_template('profile.html',
+                               user=user,
+                               can_edit=can_edit,
+                               user_ideas=user_ideas,
+                               user_favorites=user_favorites)
+    finally:
+        db_sess.close()
 
 
 @app.route('/edit_profile', methods=['GET', 'POST'])
@@ -152,33 +167,36 @@ def profile(user_id):
 def edit_profile():
     form = ProfileForm()
     db_sess = db_session.create_session()
-    user = db_sess.query(User).filter(User.id == current_user.id).first()
+    try:
+        user = db_sess.query(User).filter(User.id == current_user.id).first()
 
-    if request.method == "GET":
-        form.name.data = user.name
-        form.email.data = user.email
-        form.about.data = user.about
+        if request.method == "GET":
+            form.name.data = user.name
+            form.email.data = user.email
+            form.about.data = user.about
 
-    if form.validate_on_submit():
-        if form.name.data and form.name.data != user.name:
-            user.name = form.name.data
-        if form.email.data and form.email.data != user.email:
-            existing_user = db_sess.query(User).filter(User.email == form.email.data).first()
-            if existing_user and existing_user.id != user.id:
-                return render_template('edit_profile.html', form=form, user=user, message="Email already in use")
-            user.email = form.email.data
-        if form.about.data != user.about:
-            user.about = form.about.data
-        if form.avatar.data:
-            avatar_path = save_avatar(form.avatar.data, user.id)
-            if avatar_path:
-                if user.avatar and user.avatar != '/static/default_avatar.png':
-                    old_path = os.path.join(app.root_path, user.avatar[1:])
-                    if os.path.exists(old_path):
-                        os.remove(old_path)
-                user.avatar = avatar_path
-        db_sess.commit()
-        return redirect(url_for('profile', user_id=user.id))
+        if form.validate_on_submit():
+            if form.name.data and form.name.data != user.name:
+                user.name = form.name.data
+            if form.email.data and form.email.data != user.email:
+                existing_user = db_sess.query(User).filter(User.email == form.email.data).first()
+                if existing_user and existing_user.id != user.id:
+                    return render_template('edit_profile.html', form=form, user=user, message="Email already in use")
+                user.email = form.email.data
+            if form.about.data != user.about:
+                user.about = form.about.data
+            if form.avatar.data:
+                avatar_path = save_avatar(form.avatar.data, user.id)
+                if avatar_path:
+                    if user.avatar and user.avatar != '/static/default_avatar.png':
+                        old_path = os.path.join(app.root_path, user.avatar[1:])
+                        if os.path.exists(old_path):
+                            os.remove(old_path)
+                    user.avatar = avatar_path
+            db_sess.commit()
+            return redirect(url_for('profile', user_id=user.id))
+    finally:
+        db_sess.close()
 
     return render_template('edit_profile.html', form=form, user=user)
 
@@ -188,33 +206,39 @@ def edit_profile():
 def change_password():
     form = PasswordChangeForm()
     db_sess = db_session.create_session()
-    user = db_sess.query(User).filter(User.id == current_user.id).first()
+    try:
+        user = db_sess.query(User).filter(User.id == current_user.id).first()
 
-    if form.validate_on_submit():
-        if user.check_password(form.current_password.data):
-            user.set_password(form.new_password.data)
-            db_sess.commit()
-            return jsonify({'success': True, 'message': 'Password changed successfully'})
-        return jsonify({'success': False, 'message': 'Invalid current password'}), 400
+        if form.validate_on_submit():
+            if user.check_password(form.current_password.data):
+                user.set_password(form.new_password.data)
+                db_sess.commit()
+                return jsonify({'success': True, 'message': 'Password changed successfully'})
+            return jsonify({'success': False, 'message': 'Invalid current password'}), 400
 
-    errors = {field: err for field, err in form.errors.items()}
-    return jsonify({'success': False, 'errors': errors}), 400
+        errors = {field: err for field, err in form.errors.items()}
+        return jsonify({'success': False, 'errors': errors}), 400
+    finally:
+        db_sess.close()
 
 
 @app.route('/delete_avatar', methods=['POST'])
 @login_required
 def delete_avatar():
     db_sess = db_session.create_session()
-    user = db_sess.query(User).filter(User.id == current_user.id).first()
+    try:
+        user = db_sess.query(User).filter(User.id == current_user.id).first()
 
-    if user.avatar and user.avatar != '/static/default_avatar.png':
-        path = os.path.join(app.root_path, user.avatar[1:])
-        if os.path.exists(path):
-            os.remove(path)
-        user.avatar = '/static/default_avatar.png'
-        db_sess.commit()
-        return jsonify({'success': True})
-    return jsonify({'success': False, 'message': 'Avatar not found'}), 400
+        if user.avatar and user.avatar != '/static/default_avatar.png':
+            path = os.path.join(app.root_path, user.avatar[1:])
+            if os.path.exists(path):
+                os.remove(path)
+            user.avatar = '/static/default_avatar.png'
+            db_sess.commit()
+            return jsonify({'success': True})
+        return jsonify({'success': False, 'message': 'Avatar not found'}), 400
+    finally:
+        db_sess.close()
 
 
 @app.route('/generate_idea', methods=['GET', 'POST'])
@@ -240,126 +264,143 @@ def save_idea():
     data = request.json
 
     db_sess = db_session.create_session()
+    try:
+        description = data.get('description', '')
+        if data.get('category') == 'joke':
+            description = f"{data.get('joke_setup', '')} - {data.get('joke_punchline', '')}"
+        elif data.get('category') == 'name_info' and data.get('name_data'):
+            name_data = data.get('name_data', {})
+            description = f"Analysis for {name_data.get('full_name', name_data.get('first_name', ''))}"
 
-    description = data.get('description', '')
-    if data.get('category') == 'joke':
-        description = f"{data.get('joke_setup', '')} - {data.get('joke_punchline', '')}"
-    elif data.get('category') == 'name_info' and data.get('name_data'):
-        name_data = data.get('name_data', {})
-        description = f"Analysis for {name_data.get('full_name', name_data.get('first_name', ''))}"
+        is_published = data.get('is_published', False)
 
-    is_published = data.get('is_published', False)
+        idea = Idea(
+            title=data.get('title', 'New Idea'),
+            description=description,
+            category=data.get('category', 'random'),
+            joke=data.get('joke', ''),
+            image_url='',  # Изображения не сохраняем
+            author_id=current_user.id,
+            is_published=is_published
+        )
 
-    idea = Idea(
-        title=data.get('title', 'New Idea'),
-        description=description,
-        category=data.get('category', 'random'),
-        joke=data.get('joke', ''),
-        image_url=data.get('image_url', ''),
-        author_id=current_user.id,
-        is_published=is_published
-    )
+        db_sess.add(idea)
+        db_sess.commit()
+        db_sess.refresh(idea)
 
-    db_sess.add(idea)
-    db_sess.commit()
-    db_sess.refresh(idea)
+        user = db_sess.query(User).filter(User.id == current_user.id).first()
 
-    user = db_sess.query(User).filter(User.id == current_user.id).first()
-
-    if not is_published:
-        if idea not in user.favorite_ideas:
-            user.favorite_ideas.append(idea)
-            db_sess.commit()
-            print(f"[FAVORITES] Idea {idea.id} '{idea.title}' added to favorites for user {user.name}")
+        if not is_published:
+            if idea not in user.favorite_ideas:
+                user.favorite_ideas.append(idea)
+                db_sess.commit()
+                print(f"[FAVORITES] Idea {idea.id} '{idea.title}' added to favorites for user {user.name}")
+            else:
+                print(f"[FAVORITES] Idea {idea.id} already in favorites for user {user.name}")
         else:
-            print(f"[FAVORITES] Idea {idea.id} already in favorites for user {user.name}")
-    else:
-        print(f"[PUBLISH] Idea {idea.id} '{idea.title}' published by user {user.name}")
+            print(f"[PUBLISH] Idea {idea.id} '{idea.title}' published by user {user.name}")
 
-    db_sess.close()
-
-    return jsonify({
-        'success': True,
-        'idea_id': idea.id,
-        'saved_to_favorites': not is_published,
-        'published': is_published
-    })
+        return jsonify({
+            'success': True,
+            'idea_id': idea.id,
+            'saved_to_favorites': not is_published,
+            'published': is_published
+        })
+    finally:
+        db_sess.close()
 
 
 @app.route('/add_to_favorites/<int:idea_id>', methods=['POST'])
 @login_required
 def add_to_favorites(idea_id):
     db_sess = db_session.create_session()
-    idea = db_sess.query(Idea).filter(Idea.id == idea_id).first()
+    try:
+        idea = db_sess.query(Idea).filter(Idea.id == idea_id).first()
+        user = db_sess.query(User).filter(User.id == current_user.id).first()
 
-    user = db_sess.query(User).filter(User.id == current_user.id).first()
+        if idea:
+            if idea not in user.favorite_ideas:
+                user.favorite_ideas.append(idea)
+                db_sess.commit()
+                return jsonify({'success': True, 'message': 'Idea added to favorites'})
+            else:
+                return jsonify({'success': False, 'message': 'Idea already in favorites'}), 400
 
-    if idea:
-        if idea not in user.favorite_ideas:
-            user.favorite_ideas.append(idea)
-            db_sess.commit()
-            return jsonify({'success': True, 'message': 'Idea added to favorites'})
-        else:
-            return jsonify({'success': False, 'message': 'Idea already in favorites'}), 400
-
-    return jsonify({'success': False, 'message': 'Idea not found'}), 404
+        return jsonify({'success': False, 'message': 'Idea not found'}), 404
+    finally:
+        db_sess.close()
 
 
 @app.route('/my_favorites')
 @login_required
 def my_favorites():
     db_sess = db_session.create_session()
-    user = db_sess.query(User).filter(User.id == current_user.id).first()
-    return render_template('my_favorites.html',
-                           ideas=user.favorite_ideas,
-                           title='My Favorites')
+    try:
+        user = db_sess.query(User).filter(User.id == current_user.id).first()
+        return render_template('my_favorites.html',
+                               ideas=user.favorite_ideas,
+                               title='My Favorites')
+    finally:
+        db_sess.close()
 
 
 @app.route('/public_ideas')
 @login_required
 def public_ideas():
     db_sess = db_session.create_session()
-    ideas = db_sess.query(Idea).filter(Idea.is_published == True).order_by(Idea.created_date.desc()).all()
-    return render_template('public_ideas.html', ideas=ideas, title='Community Ideas')
+    try:
+        ideas = db_sess.query(Idea).filter(Idea.is_published == True).order_by(Idea.created_date.desc()).all()
+        return render_template('public_ideas.html', ideas=ideas, title='Community Ideas')
+    finally:
+        db_sess.close()
 
 
 @app.route('/my_ideas')
 @login_required
 def my_ideas():
     db_sess = db_session.create_session()
-    ideas = db_sess.query(Idea).filter(Idea.author_id == current_user.id, Idea.is_published == True).all()
-    return render_template('my_ideas.html', ideas=ideas, title='My Ideas')
+    try:
+        ideas = db_sess.query(Idea).filter(Idea.author_id == current_user.id, Idea.is_published == True).all()
+        return render_template('my_ideas.html', ideas=ideas, title='My Ideas')
+    finally:
+        db_sess.close()
 
 
 @app.route('/delete_from_favorites/<int:idea_id>', methods=['DELETE'])
 @login_required
 def delete_from_favorites(idea_id):
     db_sess = db_session.create_session()
-    user = db_sess.query(User).filter(User.id == current_user.id).first()
-    idea = db_sess.query(Idea).filter(Idea.id == idea_id).first()
+    try:
+        user = db_sess.query(User).filter(User.id == current_user.id).first()
+        idea = db_sess.query(Idea).filter(Idea.id == idea_id).first()
 
-    if idea and idea in user.favorite_ideas:
-        user.favorite_ideas.remove(idea)
-        db_sess.commit()
-        return jsonify({'success': True, 'message': 'Idea removed from favorites'})
+        if idea and idea in user.favorite_ideas:
+            user.favorite_ideas.remove(idea)
+            db_sess.commit()
+            return jsonify({'success': True, 'message': 'Idea removed from favorites'})
 
-    return jsonify({'success': False, 'message': 'Idea not found in favorites'}), 404
+        return jsonify({'success': False, 'message': 'Idea not found in favorites'}), 404
+    finally:
+        db_sess.close()
 
 
 @app.route('/delete_my_idea/<int:idea_id>', methods=['DELETE'])
 @login_required
 def delete_my_idea(idea_id):
     db_sess = db_session.create_session()
-    idea = db_sess.query(Idea).filter(Idea.id == idea_id, Idea.author_id == current_user.id).first()
+    try:
+        idea = db_sess.query(Idea).filter(Idea.id == idea_id, Idea.author_id == current_user.id).first()
 
-    if idea:
-        for user in idea.favorited_by:
-            user.favorite_ideas.remove(idea)
-        db_sess.delete(idea)
-        db_sess.commit()
-        return jsonify({'success': True, 'message': 'Idea deleted successfully'})
+        if idea:
+            for user in idea.favorited_by:
+                user.favorite_ideas.remove(idea)
+            db_sess.delete(idea)
+            db_sess.commit()
+            return jsonify({'success': True, 'message': 'Idea deleted successfully'})
 
-    return jsonify({'success': False, 'message': 'Idea not found or you are not the author'}), 404
+        return jsonify({'success': False, 'message': 'Idea not found or you are not the author'}), 404
+    finally:
+        db_sess.close()
 
 
 @app.errorhandler(404)
@@ -372,9 +413,15 @@ def bad_request(_):
     return make_response(jsonify({'error': 'Bad Request'}), 400)
 
 
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db_session.remove_session()
+
+
 def main():
     db_session.global_init("db/blogs.db")
     app.run(debug=True, threaded=True, host='0.0.0.0', port=5000)
+
 
 if __name__ == '__main__':
     main()

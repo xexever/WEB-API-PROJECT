@@ -37,16 +37,6 @@
                     </h3>
                 </div>
                 <div class="card-body">
-                    {% if idea.image_url %}
-                    <div class="text-center mb-4">
-                        <img src="{{ idea.image_url }}"
-                             class="img-fluid rounded shadow-sm"
-                             style="max-height: 300px; width: auto; object-fit: contain;"
-                             alt="{{ idea.title }}"
-                             loading="lazy"
-                             onerror="this.style.display='none'">
-                    </div>
-                    {% endif %}
 
                     <h4 class="text-success text-center mb-3">{{ idea.title }}</h4>
 
@@ -164,7 +154,6 @@ function saveIdea(publish) {
         description: ideaData.description || '',
         category: ideaData.category || 'random',
         joke: ideaData.joke || '',
-        image_url: ideaData.image_url || '',
         is_published: publish
     };
 
