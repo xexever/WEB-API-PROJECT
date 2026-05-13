@@ -265,24 +265,69 @@ def save_idea():
 
     db_sess = db_session.create_session()
     try:
+        category = data.get('category', 'random')
+
+        # Формируем полное описание и дополнительные поля в зависимости от категории
         description = data.get('description', '')
-        if data.get('category') == 'joke':
-            description = f"{data.get('joke_setup', '')} - {data.get('joke_punchline', '')}"
-        elif data.get('category') == 'name_info' and data.get('name_data'):
+        extra_data = {}
+
+        if category == 'joke':
+            joke_setup = data.get('joke_setup', '')
+            joke_punchline = data.get('joke_punchline', '')
+            description = f"Setup: {joke_setup}\nPunchline: {joke_punchline}"
+            extra_data['joke'] = f"{joke_setup} - {joke_punchline}"
+
+        elif category == 'trivia':
+            question = data.get('description', '')
+            correct_answer = data.get('correct_answer', '')
+            description = f"Question: {question}\n\nAnswer: {correct_answer}"
+            extra_data['correct_answer'] = correct_answer
+
+        elif category == 'name_info':
             name_data = data.get('name_data', {})
-            description = f"Analysis for {name_data.get('full_name', name_data.get('first_name', ''))}"
+            name = name_data.get('name', 'Unknown')
+            age = name_data.get('age', 'Unknown')
+            gender = name_data.get('gender', 'Unknown')
+            country = name_data.get('country', 'Unknown')
+            description = f"Name Analysis: {name}\n\n"
+            description += f"Estimated age: {age}\n"
+            description += f"Gender: {gender}\n"
+            description += f"Country: {country}\n"
+            description += f"\nBased on statistical data from social networks"
+            extra_data['name_data'] = name_data
+
+        elif category == 'food':
+            ingredients = data.get('ingredients', '')
+            cuisine = data.get('cuisine', '')
+            description = f"{data.get('title', 'Delicious Dish')}\n\n"
+            if cuisine:
+                description += f"Cuisine: {cuisine}\n"
+            if ingredients:
+                description += f"Ingredients: {ingredients}\n"
+            if data.get('extra_info'):
+                description += f"\n{data.get('extra_info')}"
+
+        elif category == 'advice':
+            description = f"💡 {data.get('description', '')}"
+            if data.get('extra_info'):
+                description += f"\n\n{data.get('extra_info')}"
 
         is_published = data.get('is_published', False)
 
         idea = Idea(
             title=data.get('title', 'New Idea'),
             description=description,
-            category=data.get('category', 'random'),
-            joke=data.get('joke', ''),
-            image_url='',  # Изображения не сохраняем
+            category=category,
+            joke=extra_data.get('joke', data.get('joke', '')),
+            image_url='',
             author_id=current_user.id,
             is_published=is_published
         )
+
+        if category == 'trivia' and extra_data.get('correct_answer'):
+            idea.description = description
+        if category == 'name_info' and extra_data.get('name_data'):
+            idea.description = description
 
         db_sess.add(idea)
         db_sess.commit()
@@ -294,11 +339,6 @@ def save_idea():
             if idea not in user.favorite_ideas:
                 user.favorite_ideas.append(idea)
                 db_sess.commit()
-                print(f"[FAVORITES] Idea {idea.id} '{idea.title}' added to favorites for user {user.name}")
-            else:
-                print(f"[FAVORITES] Idea {idea.id} already in favorites for user {user.name}")
-        else:
-            print(f"[PUBLISH] Idea {idea.id} '{idea.title}' published by user {user.name}")
 
         return jsonify({
             'success': True,
@@ -306,6 +346,9 @@ def save_idea():
             'saved_to_favorites': not is_published,
             'published': is_published
         })
+    except Exception as e:
+        print(f"Error saving idea: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
     finally:
         db_sess.close()
 

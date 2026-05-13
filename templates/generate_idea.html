@@ -122,7 +122,6 @@ document.getElementById('generateForm').addEventListener('submit', function() {
 });
 
 function saveIdea(publish) {
-    // Защита от двойного нажатия
     if (isSaving) {
         console.log('Already saving, please wait...');
         return;
@@ -134,7 +133,6 @@ function saveIdea(publish) {
         return;
     }
 
-    // Отключаем кнопки во время сохранения
     isSaving = true;
     const favBtn = document.getElementById('saveToFavoritesBtn');
     const pubBtn = document.getElementById('publishBtn');
@@ -148,7 +146,7 @@ function saveIdea(publish) {
         pubBtn.innerHTML = 'Publishing...';
     }
 
-    // Создаем копию данных для отправки
+    // Создаем данные для отправки
     const dataToSend = {
         title: ideaData.title || 'New Idea',
         description: ideaData.description || '',
@@ -157,20 +155,33 @@ function saveIdea(publish) {
         is_published: publish
     };
 
-    // Добавляем дополнительные поля для специфических категорий
-    if (ideaData.joke_setup) {
-        dataToSend.joke_setup = ideaData.joke_setup;
-        dataToSend.joke_punchline = ideaData.joke_punchline;
+    // Добавляем данные для разных категорий
+    if (ideaData.category === 'joke') {
+        dataToSend.joke_setup = ideaData.joke_setup || '';
+        dataToSend.joke_punchline = ideaData.joke_punchline || '';
     }
-    if (ideaData.correct_answer) {
-        dataToSend.correct_answer = ideaData.correct_answer;
+
+    if (ideaData.category === 'trivia') {
+        dataToSend.correct_answer = ideaData.correct_answer || '';
+        dataToSend.question = ideaData.description || '';
     }
-    if (ideaData.name_data) {
-        dataToSend.name_data = ideaData.name_data;
+
+    if (ideaData.category === 'name_info') {
+        dataToSend.name_data = ideaData.name_data || {};
+    }
+
+    if (ideaData.category === 'food') {
+        dataToSend.ingredients = ideaData.extra_info || '';
+        dataToSend.cuisine = ideaData.description || '';
+        dataToSend.title = ideaData.title || '';
+        dataToSend.extra_info = ideaData.extra_info || '';
+    }
+
+    if (ideaData.category === 'advice') {
+        dataToSend.extra_info = ideaData.extra_info || '';
     }
 
     console.log('Saving idea:', dataToSend);
-    console.log('Publish mode:', publish ? 'PUBLISH' : 'FAVORITES');
 
     fetch('/save_idea', {
         method: 'POST',
@@ -197,7 +208,6 @@ function saveIdea(publish) {
         alert('An error occurred while saving. Please try again.');
     })
     .finally(() => {
-        // Включаем кнопки обратно через 1 секунду
         setTimeout(() => {
             isSaving = false;
             if (favBtn) {
@@ -211,10 +221,6 @@ function saveIdea(publish) {
         }, 1000);
     });
 }
-
-document.getElementById('categorySelect').addEventListener('change', function() {
-    document.getElementById('generateForm').submit();
-});
 </script>
 
 <style>

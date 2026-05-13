@@ -222,7 +222,6 @@ class APIService:
             return {
                 'title': data.get('title', 'Cook Something Delicious'),
                 'description': data.get('description', 'Try a new recipe'),
-                # 'image_url' УДАЛЕН
                 'extra_info': data.get('extra_info', ''),
             }
 
@@ -267,7 +266,6 @@ class APIService:
                 'description': data.get('description', ''),
                 'category': 'name_info',
                 'extra_info': data.get('extra_info', ''),
-                # 'image_url' УДАЛЕН
                 'name_data': data.get('name_data', {})
             }
 

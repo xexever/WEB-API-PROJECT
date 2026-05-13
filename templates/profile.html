@@ -54,7 +54,7 @@
                                                             <i class="fas fa-calendar"></i> {{ idea.created_date.strftime('%d.%m.%Y') }}
                                                             <span class="ml-2"><i class="fas fa-tag"></i> {{ idea.category }}</span>
                                                         </small>
-                                                        <p class="mt-2 mb-1">{{ idea.description[:150] }}{% if idea.description|length > 150 %}...{% endif %}</p>
+                                                        <p class="mt-2 mb-1">{{ idea.description }}</p>
                                                     </div>
                                                     <div class="ml-2">
                                                         <button class="btn btn-sm btn-outline-danger rounded-circle" style="width:34px;height:34px;"
@@ -88,7 +88,7 @@
                                                             <span class="ml-2"><i class="fas fa-tag"></i> {{ fav.category }}</span>
                                                             <span class="ml-2"><i class="fas fa-user"></i> by {{ fav.author.name if fav.author else 'Anonymous' }}</span>
                                                         </small>
-                                                        <p class="mt-2 mb-1">{{ fav.description[:150] }}{% if fav.description|length > 150 %}...{% endif %}</p>
+                                                        <p class="mt-2 mb-1">{{ fav.description }}</p>
                                                     </div>
                                                     <div class="ml-2">
                                                         <button class="btn btn-sm btn-outline-danger rounded-circle" style="width:34px;height:34px;"

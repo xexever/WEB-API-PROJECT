@@ -20,9 +20,13 @@
                         </div>
 
                         <h5 class="card-title text-success">{{ idea.title }}</h5>
-                        <p class="card-text">{{ idea.description[:200] }}{% if idea.description|length > 200 %}...{% endif %}</p>
+                        <p class="card-text">{{ idea.description }}</p>
+                        {% if idea.category == 'joke' and idea.joke %}
+                            <div class="alert alert-light border mt-2">
+                                <p class="mb-0"><strong>Joke:</strong> {{ idea.joke }}</p>
+                            </div>
+                        {% endif %}
 
-                        <!-- Автор с аватаром -->
                         <div class="d-flex align-items-center mt-2 mb-2">
                             {% if idea.author and idea.author.avatar %}
                                 <img src="{{ idea.author.avatar }}" class="rounded-circle mr-2" style="width: 30px; height: 30px; object-fit: cover;">
@@ -66,17 +70,15 @@ function deleteFromFavorites(ideaId) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Анимация удаления
                 const card = document.getElementById(`idea-card-${ideaId}`);
                 if (card) {
                     card.style.opacity = '0';
                     card.style.transform = 'translateY(-20px)';
                     setTimeout(() => {
                         card.remove();
-                        // Проверяем, остались ли еще идеи
                         const remainingCards = document.querySelectorAll('[id^="idea-card-"]').length;
                         if (remainingCards === 0) {
-                            location.reload(); // Перезагружаем страницу если идей нет
+                            location.reload();
                         }
                     }, 300);
                 }
@@ -109,6 +111,10 @@ function deleteFromFavorites(ideaId) {
     }
     [id^="idea-card-"] {
         transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .card-text {
+        white-space: pre-wrap;
+        word-wrap: break-word;
     }
 </style>
 {% endblock %}
